@@ -17,7 +17,7 @@
 
 設計の詳細は [docs/00_DATABASE_DESIGN.md](docs/00_DATABASE_DESIGN.md) を参照。
 
-## 現在の状態（Phase 1）
+## 現在の状態（Phase 2 完了）
 
 | データ | 状態 |
 |---|---|
@@ -27,16 +27,38 @@
 | 資本関係エッジ（Wikidata） | ✅ 1,999本（tier 3・observed_binary） |
 | EDINET有報XBRL（大株主・財務・関係会社） | ✅ **tier 1 取得済み**: 2,245社分の有報CSVを解析。大株主 21,528件（うち3,780本の資本エッジは持分比率observed_value）、連結財務 2,147社（IFRS/GAAP自動判別） |
 | OECD ICIO 2023（Layer A・国×産業連関） | ✅ 2020年表: 3,465ノード、40万係数（`data/icio2020_coeff.npz`） |
-| UN Comtrade・資源価格・運河・為替 | Phase 2（スキーマ実装済み） |
+| UN Comtrade（二国間貿易） | ✅ 2023年・日本の輸出入758フロー（TOTAL + HS27/85/84） |
+| 資源価格（世界銀行 Pink Sheet） | ✅ 17商品・月次2016-2024 |
+| チョークポイント（スエズ・ホルムズ・台湾海峡等） | ✅ 6ルート + 日本主要6港（`shipping_route` / `port`） |
+| What-ifエンジン（Layer A × Layer F 統合伝播） | ✅ 5シナリオ動作確認済み |
+| Three.js 3Dビューア | ✅ `viz/` — 3,893社・5,836エッジ |
 
 `db/cybermap.sqlite` に全データ格納（5,529社・23テーブル）。
 
 ## クイックスタート
 
 ```bash
-# デモ: トヨタ自動車が倒産したらどこが揺れるか（エンジン動作確認用）
+# What-ifエンジン: 5シナリオすべて動作可能
 cd scripts
-python3 simulate_demo.py --ticker 7203 --iterations 1000
+
+# 1. 原油価格2倍
+python3 scenario_engine.py --scenario oil_price --multiplier 2.0 --iterations 300
+
+# 2. 台湾海峡封鎖（TWN生産停止80%）
+python3 scenario_engine.py --scenario war_blockade --countries TWN --stop-rate 0.8
+
+# 3. チョークポイント閉塞
+python3 scenario_engine.py --scenario chokepoint --route taiwan_strait --severity 0.5
+
+# 4. 特定企業倒産（トヨタ自動車）
+python3 scenario_engine.py --scenario entity_failure --ticker 7203
+
+# 5. 港湾閉鎖（名古屋港）
+python3 scenario_engine.py --scenario port_closure --port "JP NGO" --severity 1.0
+
+# 3Dビューア用データエクスポート
+python3 export_viz.py
+# → viz/data/graph.json → viz/index.html をブラウザで開く
 
 # EDINET取得（要: 無料APIキー https://www.fsa.go.jp/opendata/）
 export EDINET_KEY="..."
@@ -45,6 +67,14 @@ python3 fetch_edinet.py --start 2026-10-01 --end 2026-10-31 --download
 # DB再構築
 python3 build_db.py
 ```
+
+## 3Dビューア
+
+`viz/index.html` — Three.jsによる3D企業ネットワーク可視化。
+- 3,893社の上場企業を18業種の球状クラスタに配置
+- 資本関係（親会社・子会社）と供給関係のエッジを光で表示
+- 業種フィルタ、企業検索、ノードクリックで詳細（時価総額・接続数）
+- ダブルクリックでカメラフォーカス、ブルームポストプロセッシング
 
 ## 科学性の原則
 

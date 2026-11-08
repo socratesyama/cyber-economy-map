@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サイバー経済マップ — 日本上場企業サプライチェーンネットワーク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-body: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Menlo', monospace;
+  --color-bg: #0a0e17;
+  --color-surface: rgba(255, 255, 255, 0.06);
+  --color-surface-solid: #141a26;
+  --color-border: rgba(255, 255, 255, 0.14);
+  --color-text: #e8ecf4;
+  --color-text-muted: #8a93a8;
+  --color-text-faint: #4a5468;
+  --color-primary: #4af0c0;
+  --color-primary-dim: rgba(74, 240, 192, 0.15);
+  --color-accent-blue: #4fc3f7;
+  --color-accent-orange: #ffb74d;
+  --color-danger: #ff5370;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 26px;
+  --text-2xl: 34px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --panel-blur: 14px;
+  --panel-radius: 10px;
+  --transition-ui: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+body {
+  min-height: 100vh;
+  line-height: 1.6;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  overflow: hidden;
+}
+#canvas-container { position: fixed; inset: 0; z-index: 1; }
+canvas { display: block; }
+
+/* --- UIオーバーレイ --- */
+#ui-overlay {
+  position: fixed; inset: 0; z-index: 10;
+  pointer-events: none;
+  display: flex; flex-direction: column;
+}
+#ui-overlay > * { pointer-events: auto; }
+
+/* ヘッダー */
+#header {
+  padding: var(--space-6) var(--space-8) var(--space-4);
+  display: flex; align-items: baseline; gap: var(--space-4);
+  background: linear-gradient(180deg, rgba(10,14,23,0.92) 0%, rgba(10,14,23,0) 100%);
+}
+#header h1 {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+  text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+}
+#header .subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#header .stats {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  display: flex; gap: var(--space-6);
+  margin-right: 180px;
+}
+#header .stats span b { color: var(--color-primary); font-weight: 600; }
+
+/* 検索バー */
+#search-bar {
+  padding: 0 var(--space-8);
+  display: flex; gap: var(--space-3);
+  align-items: center;
+}
+#search-input {
+  width: 320px;
+  background: var(--color-surface);
+  backdrop-filter: blur(var(--panel-blur));
+  border: 1px solid var(--color-border);
+  border-radius: var(--panel-radius);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--transition-ui);
+}
+#search-input:focus { border-color: var(--color-primary); }
+#search-input::placeholder { color: var(--color-text-faint); }
+
+/* 業種フィルター */
+#sector-filter {
+  display: flex; gap: var(--space-2); flex-wrap: wrap;
+  padding: var(--space-4) var(--space-8);
+  max-width: calc(100vw - 200px);
+}
+.sector-chip {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  background: var(--color-surface);
+  backdrop-filter: blur(var(--panel-blur));
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-ui);
+  user-select: none;
+}
+.sector-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+.sector-chip:hover { border-color: var(--color-text-muted); color: var(--color-text); }
+.sector-chip.active {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  background: var(--color-primary-dim);
+}
+
+/* 情報パネル */
+#info-panel {
+  position: absolute;
+  bottom: var(--space-8);
+  left: var(--space-8);
+  width: 380px;
+  background: rgba(20, 26, 38, 0.92);
+  backdrop-filter: blur(var(--panel-blur));
+  border: 1px solid var(--color-border);
+  border-radius: var(--panel-radius);
+  padding: var(--space-4) var(--space-6);
+  display: none;
+}
+#info-panel.visible { display: block; }
+#info-panel h3 {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+  color: var(--color-text);
+}
+#info-panel .meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+  display: flex; gap: var(--space-4);
+}
+#info-panel .sector-badge {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  font-size: var(--text-xs);
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+}
+#info-panel .mcap {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-accent-blue);
+  font-weight: 600;
+}
+#info-panel .connections {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-2);
+  line-height: 1.8;
+}
+#info-panel .connections b { color: var(--color-text); font-weight: 600; }
+#info-close {
+  position: absolute; top: var(--space-3); right: var(--space-3);
+  background: none; border: none; color: var(--color-text-faint);
+  font-size: var(--text-lg); cursor: pointer; line-height: 1;
+}
+#info-close:hover { color: var(--color-text); }
+
+/* 操作ヒント */
+#controls-hint {
+  position: absolute;
+  bottom: var(--space-8);
+  right: var(--space-8);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  text-align: right;
+  line-height: 1.8;
+}
+#controls-hint kbd {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* ローディング */
+#loading {
+  position: fixed; inset: 0; z-index: 100;
+  background: var(--color-bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-4);
+  transition: opacity 600ms ease;
+}
+#loading.hidden { opacity: 0; pointer-events: none; }
+#loading .title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.04em;
+}
+#loading .sub {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+#loading .bar {
+  width: 200px; height: 2px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 1px;
+  overflow: hidden;
+}
+#loading .bar::after {
+  content: ''; display: block; height: 100%;
+  background: var(--color-primary);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: translateX(-100%); width: 40%; }
+  50% { transform: translateX(150%); width: 60%; }
+}
+
+/* 凡例 */
+#legend {
+  position: absolute;
+  top: 50%;
+  right: var(--space-8);
+  transform: translateY(-50%);
+  background: rgba(20, 26, 38, 0.85);
+  backdrop-filter: blur(var(--panel-blur));
+  border: 1px solid var(--color-border);
+  border-radius: var(--panel-radius);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  display: flex; flex-direction: column; gap: var(--space-1);
+}
+#legend .legend-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  margin-bottom: var(--space-1);
+}
+#legend .legend-item {
+  display: flex; align-items: center; gap: var(--space-2);
+}
+#legend .legend-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  #header { padding: var(--space-4) var(--space-4); flex-wrap: wrap; }
+  #header .stats { display: none; }
+  #search-bar { padding: 0 var(--space-4); }
+  #search-input { width: 100%; flex: 1; }
+  #sector-filter { padding: var(--space-2) var(--space-4); }
+  #info-panel { left: var(--space-4); right: var(--space-4); width: auto; bottom: var(--space-4); }
+  #controls-hint { display: none; }
+  #legend { top: auto; bottom: var(--space-4); right: var(--space-4); transform: none; max-height: 40vh; overflow-y: auto; }
+  #header .stats { margin-right: 0; }
+  #sector-filter { max-width: 100vw; }
+}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="title">サイバー経済マップ</div>
+  <div class="sub">Cyber Economy Map — Loading Network</div>
+  <div class="bar"></div>
+</div>
+<div id="canvas-container"></div>
+<div id="ui-overlay">
+  <header id="header">
+    <h1>サイバー経済マップ</h1>
+    <div class="subtitle">Cyber Economy Map</div>
+    <div class="stats">
+      <span>企業 <b id="stat-nodes">0</b></span>
+      <span>関係 <b id="stat-edges">0</b></span>
+      <span>業種 <b id="stat-sectors">0</b></span>
+    </div>
+  </header>
+  <div id="search-bar">
+    <input type="text" id="search-input" placeholder="企業名・ティッカーで検索 (例: トヨタ, 7203)" autocomplete="off">
+  </div>
+  <div id="sector-filter"></div>
+  <div id="info-panel">
+    <button id="info-close" aria-label="閉じる">×</button>
+    <h3 id="info-name"></h3>
+    <div class="meta">
+      <span id="info-ticker"></span>
+      <span id="info-sector"></span>
+    </div>
+    <div class="mcap" id="info-mcap"></div>
+    <div class="connections" id="info-connections"></div>
+  </div>
+  <div id="legend">
+    <div class="legend-title">業種</div>
+    <div id="legend-items"></div>
+  </div>
+  <div id="controls-hint">
+    <div><kbd>ドラッグ</kbd> 回転 &nbsp; <kbd>スクロール</kbd> ズーム</div>
+    <div><kbd>ノードクリック</kbd> 詳細 &nbsp; <kbd>ダブルクリック</kbd> フォーカス</div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'https://esm.sh/three@0.160.0';
+import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+
+// ---------- 状態 ----------
+let graph = null;
+let nodeIndex = new Map();
+let activeSectors = new Set();
+let selectedNode = null;
+let highlightedNodes = new Set();
+let raycaster, mouse;
+
+// ---------- DOM ----------
+const $ = (id) => document.getElementById(id);
+const loadingEl = $('loading');
+const searchInput = $('search-input');
+const sectorFilter = $('sector-filter');
+const infoPanel = $('info-panel');
+
+// ---------- Three.js 初期化 ----------
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0e17, 0.004);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
+camera.position.set(0, 40, 200);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+$('canvas-container').appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.rotateSpeed = 0.6;
+controls.minDistance = 30;
+controls.maxDistance = 600;
+
+// ポストプロセッシング（ブルーム）
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  0.6, 0.4, 0.85
+);
+composer.addPass(bloomPass);
+
+// ライト
+scene.add(new THREE.AmbientLight(0x404860, 2.0));
+const pointLight = new THREE.PointLight(0x4af0c0, 1.5, 500);
+pointLight.position.set(0, 0, 0);
+scene.add(pointLight);
+
+// 背景の星（パーティクル）
+const starGeo = new THREE.BufferGeometry();
+const starCount = 2000;
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  starPos[i * 3] = (Math.random() - 0.5) * 800;
+  starPos[i * 3 + 1] = (Math.random() - 0.5) * 800;
+  starPos[i * 3 + 2] = (Math.random() - 0.5) * 800;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const starMat = new THREE.PointsMaterial({
+  color: 0x3a4460, size: 1.2, sizeAttenuation: true,
+  transparent: true, opacity: 0.6,
+});
+scene.add(new THREE.Points(starGeo, starMat));
+
+// ---------- ノード・エッジ ----------
+let nodeMeshes = [];
+let edgeLines = null;
+let nodeGroup = new THREE.Group();
+scene.add(nodeGroup);
+
+// ---------- データロード ----------
+async function loadData() {
+  const res = await fetch('./data/graph.json');
+  graph = await res.json();
+  buildNetwork();
+  buildUI();
+  loadingEl.classList.add('hidden');
+  animate();
+}
+
+function buildNetwork() {
+  // ノード
+  const sphereGeo = new THREE.SphereGeometry(1, 12, 10);
+  nodeMeshes = graph.nodes.map((n) => {
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(n.color),
+      emissive: new THREE.Color(n.color).multiplyScalar(0.3),
+      roughness: 0.5, metalness: 0.1,
+      transparent: true, opacity: 0.9,
+    });
+    const mesh = new THREE.Mesh(sphereGeo, mat);
+    mesh.position.set(n.x, n.y, n.z);
+    mesh.scale.setScalar(n.size * 0.5);
+    mesh.userData = { node: n };
+    nodeGroup.add(mesh);
+    nodeIndex.set(n.id, mesh);
+    return mesh;
+  });
+
+  // エッジ（LineSegments）
+  const edgePositions = [];
+  const edgeColors = [];
+  for (const e of graph.edges) {
+    const srcMesh = nodeIndex.get(e.src);
+    const dstMesh = nodeIndex.get(e.dst);
+    if (!srcMesh || !dstMesh) continue;
+    const s = srcMesh.position, d = dstMesh.position;
+    edgePositions.push(s.x, s.y, s.z, d.x, d.y, d.z);
+    // 色は薄い青（薄く）
+    const alpha = e.share ? Math.min(0.6, e.share / 50 + 0.1) : 0.15;
+    edgeColors.push(0.2, 0.5, 0.9, 0.2, 0.5, 0.9);
+  }
+  const edgeGeo = new THREE.BufferGeometry();
+  edgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
+  edgeGeo.setAttribute('color', new THREE.Float32BufferAttribute(edgeColors, 3));
+  edgeLines = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({
+    vertexColors: true,
+    transparent: true, opacity: 0.25,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }));
+  scene.add(edgeLines);
+}
+
+// ---------- UI構築 ----------
+function buildUI() {
+  $('stat-nodes').textContent = graph.nodes.length.toLocaleString();
+  $('stat-edges').textContent = graph.edges.length.toLocaleString();
+  const sectors = new Set(graph.nodes.map(n => n.sector));
+  $('stat-sectors').textContent = sectors.size;
+
+  // 業種チップ
+  sectorFilter.innerHTML = '';
+  for (const s of sectors) {
+    const chip = document.createElement('div');
+    chip.className = 'sector-chip active';
+    chip.dataset.sector = s;
+    const color = graph.nodes.find(n => n.sector === s)?.color || '#888';
+    chip.innerHTML = `<span class="dot" style="background:${color}"></span>${s}`;
+    chip.addEventListener('click', () => toggleSector(s, chip));
+    sectorFilter.appendChild(chip);
+    activeSectors.add(s);
+  }
+
+  // 凡例
+  const legendItems = $('legend-items');
+  for (const s of sectors) {
+    const color = graph.nodes.find(n => n.sector === s)?.color || '#888';
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<span class="legend-dot" style="background:${color}"></span>${s}`;
+    legendItems.appendChild(item);
+  }
+}
+
+function toggleSector(sector, chip) {
+  if (activeSectors.has(sector)) {
+    activeSectors.delete(sector);
+    chip.classList.remove('active');
+  } else {
+    activeSectors.add(sector);
+    chip.classList.add('active');
+  }
+  applyFilter();
+}
+
+function applyFilter() {
+  for (const mesh of nodeMeshes) {
+    const n = mesh.userData.node;
+    const visible = activeSectors.has(n.sector);
+    mesh.visible = visible;
+  }
+  // エッジも再計算（簡易的に全部表示のまま、または非表示ノードのエッジを隠す）
+  // パフォーマンスのためエッジは全体表示のまま
+}
+
+// ---------- 検索 ----------
+searchInput.addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  if (q.length < 1) { resetHighlight(); return; }
+  const matches = graph.nodes.filter(n =>
+    n.name.toLowerCase().includes(q) || n.ticker.toLowerCase().includes(q)
+  ).slice(0, 20);
+  highlightNodes(matches);
+});
+
+function resetHighlight() {
+  for (const mesh of nodeMeshes) {
+    mesh.material.opacity = 0.9;
+    mesh.material.emissiveIntensity = 1;
+  }
+  highlightedNodes.clear();
+}
+
+function highlightNodes(nodes) {
+  resetHighlight();
+  const ids = new Set(nodes.map(n => n.id));
+  for (const mesh of nodeMeshes) {
+    if (!ids.has(mesh.userData.node.id)) {
+      mesh.material.opacity = 0.15;
+      mesh.material.emissiveIntensity = 0.3;
+    } else {
+      mesh.material.opacity = 1.0;
+      mesh.material.emissiveIntensity = 2.5;
+      highlightedNodes.add(mesh);
+    }
+  }
+}
+
+// ---------- クリック処理 ----------
+raycaster = new THREE.Raycaster();
+mouse = new THREE.Vector2();
+
+renderer.domElement.addEventListener('click', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(nodeMeshes.filter(m => m.visible));
+  if (intersects.length > 0) {
+    selectNode(intersects[0].object.userData.node);
+  }
+});
+
+renderer.domElement.addEventListener('dblclick', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(nodeMeshes.filter(m => m.visible));
+  if (intersects.length > 0) {
+    const mesh = intersects[0].object;
+    const target = mesh.position.clone();
+    animateCameraTo(target);
+  }
+});
+
+function animateCameraTo(target) {
+  const start = camera.position.clone();
+  const dist = 80;
+  const dir = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+  const end = target.clone().add(dir.multiplyScalar(dist));
+  const startTime = performance.now();
+  const duration = 1200;
+
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    const ease = 1 - Math.pow(1 - t, 3);
+    camera.position.lerpVectors(start, end, ease);
+    controls.target.lerpVectors(controls.target, target, ease);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function selectNode(node) {
+  selectedNode = node;
+  $('info-name').textContent = node.name;
+  $('info-ticker').textContent = node.ticker ? `Ticker: ${node.ticker}` : '';
+  $('info-sector').innerHTML = `<span class="sector-badge"><span class="dot" style="background:${node.color};width:8px;height:8px;border-radius:50%;display:inline-block"></span>${node.sector}</span>`;
+  const mcapY = node.mcap / 1e12;
+  const mcapOku = node.mcap / 1e8;
+  $('info-mcap').textContent = node.mcap > 0 ?
+    (mcapY >= 1 ? `時価総額 ¥${mcapY.toFixed(2)}兆` : `時価総額 ¥${Math.round(mcapOku).toLocaleString()}億`) : '';
+
+  // 接続数
+  const inEdges = graph.edges.filter(e => e.dst === node.id);
+  const outEdges = graph.edges.filter(e => e.src === node.id);
+  const parents = inEdges.filter(e => e.type === 'ownership_parent_of');
+  const children = outEdges.filter(e => e.type === 'ownership_parent_of');
+  const suppliers = outEdges.filter(e => e.type === 'supply_buyer_of');
+  const buyers = inEdges.filter(e => e.type === 'supply_buyer_of');
+  $('info-connections').innerHTML = `
+    <b>親会社</b> ${parents.length}社 &nbsp; <b>子会社</b> ${children.length}社<br>
+    <b>供給先</b> ${suppliers.length}社 &nbsp; <b>仕入先</b> ${buyers.length}社
+  `;
+  infoPanel.classList.add('visible');
+
+  // 隣接ノードをハイライト
+  const neighborIds = new Set();
+  for (const e of inEdges) neighborIds.add(e.src);
+  for (const e of outEdges) neighborIds.add(e.dst);
+  neighborIds.add(node.id);
+  const nodesToHighlight = graph.nodes.filter(n => neighborIds.has(n.id));
+  highlightNodes(nodesToHighlight);
+}
+
+$('info-close').addEventListener('click', () => {
+  infoPanel.classList.remove('visible');
+  selectedNode = null;
+  resetHighlight();
+});
+
+// ---------- アニメーション ----------
+let time = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.016;
+  controls.update();
+
+  // 選択中のノードをパルス
+  if (selectedNode) {
+    const mesh = nodeIndex.get(selectedNode.id);
+    if (mesh && mesh.visible) {
+      const pulse = 1 + Math.sin(time * 4) * 0.15;
+      mesh.scale.setScalar(selectedNode.size * 0.5 * pulse);
+    }
+  }
+
+  // 星をゆっくり回転
+  starGeo.rotateY(0.0002);
+
+  composer.render();
+}
+
+// ---------- リサイズ ----------
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ---------- 起動 ----------
+loadData();
+</script>
+</body>
+</html>
