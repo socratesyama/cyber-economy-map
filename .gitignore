@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 raw/edinet/xbrl/
 .DS_Store
+raw/edinet/csv/

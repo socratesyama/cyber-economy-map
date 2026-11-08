@@ -21,7 +21,7 @@
 """
 import argparse, datetime, json, os, sys, time, urllib.request, urllib.error, zipfile
 
-API = "https://api.edinet-fsa.go.jp/api/documents/v2"
+API = "https://api.edinet-fsa.go.jp/api/v2"
 RAW = "../raw/edinet"
 DATA = "../data"
 
