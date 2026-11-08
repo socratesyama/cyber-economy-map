@@ -3,674 +3,1649 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>サイバー経済マップ — 日本上場企業サプライチェーンネットワーク</title>
+<title>サイバー経済マップ — 日本上場企業ネットワーク</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --font-body: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
   --font-mono: 'JetBrains Mono', 'Menlo', monospace;
-  --color-bg: #0a0e17;
-  --color-surface: rgba(255, 255, 255, 0.06);
-  --color-surface-solid: #141a26;
-  --color-border: rgba(255, 255, 255, 0.14);
-  --color-text: #e8ecf4;
-  --color-text-muted: #8a93a8;
-  --color-text-faint: #4a5468;
-  --color-primary: #4af0c0;
-  --color-primary-dim: rgba(74, 240, 192, 0.15);
-  --color-accent-blue: #4fc3f7;
-  --color-accent-orange: #ffb74d;
-  --color-danger: #ff5370;
-  --text-xs: 12px;
-  --text-sm: 14px;
-  --text-base: 16px;
-  --text-lg: 20px;
-  --text-xl: 26px;
-  --text-2xl: 34px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --panel-blur: 14px;
-  --panel-radius: 10px;
-  --transition-ui: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  --bg: #06090F;
+  --bg-canvas: #04070C;
+  --surface: #0D1420;
+  --surface-2: #111A2B;
+  --surface-3: #16213A;
+  --border: #1E293B;
+  --border-light: #334155;
+
+  --text: #F1F5F9;
+  --text-muted: #94A3B8;
+  --text-faint: #64748B;
+
+  --primary: #22D3EE;
+  --primary-dim: rgba(34, 211, 238, 0.12);
+  --primary-glow: rgba(34, 211, 238, 0.25);
+  --accent: #F59E0B;
+  --danger: #EF4444;
+  --success: #22C55E;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+
+  --transition: 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 body {
   min-height: 100vh;
-  line-height: 1.6;
   font-family: var(--font-body);
-  font-size: var(--text-base);
-  color: var(--color-text);
-  background-color: var(--color-bg);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--bg);
   overflow: hidden;
 }
-#canvas-container { position: fixed; inset: 0; z-index: 1; }
-canvas { display: block; }
 
-/* --- UIオーバーレイ --- */
-#ui-overlay {
-  position: fixed; inset: 0; z-index: 10;
-  pointer-events: none;
-  display: flex; flex-direction: column;
-}
-#ui-overlay > * { pointer-events: auto; }
+#app { display: flex; height: 100vh; width: 100vw; }
 
-/* ヘッダー */
-#header {
-  padding: var(--space-6) var(--space-8) var(--space-4);
-  display: flex; align-items: baseline; gap: var(--space-4);
-  background: linear-gradient(180deg, rgba(10,14,23,0.92) 0%, rgba(10,14,23,0) 100%);
+/* ========== サイドバー ========== */
+#sidebar {
+  width: 300px;
+  min-width: 300px;
+  height: 100%;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  transition: margin-left var(--transition);
+  overflow: hidden;
 }
-#header h1 {
-  font-size: var(--text-xl);
+#sidebar.collapsed { margin-left: -300px; }
+
+#sidebar-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#sidebar-header h1 {
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--color-text);
-  text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+  letter-spacing: 0.01em;
+  color: var(--text);
+  line-height: 1.3;
 }
-#header .subtitle {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
+#sidebar-header .sub {
   font-family: var(--font-mono);
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  margin-top: 4px;
 }
-#header .stats {
-  margin-left: auto;
+#sidebar-header .stats-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+#sidebar-header .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#sidebar-header .stat .label {
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.05em;
+}
+#sidebar-header .stat .value {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  display: flex; gap: var(--space-6);
-  margin-right: 180px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
 }
-#header .stats span b { color: var(--color-primary); font-weight: 600; }
 
-/* 検索バー */
-#search-bar {
-  padding: 0 var(--space-8);
-  display: flex; gap: var(--space-3);
-  align-items: center;
+/* 検索 */
+#search-section {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  position: relative;
 }
 #search-input {
-  width: 320px;
-  background: var(--color-surface);
-  backdrop-filter: blur(var(--panel-blur));
-  border: 1px solid var(--color-border);
-  border-radius: var(--panel-radius);
-  padding: var(--space-2) var(--space-4);
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 9px 12px 9px 34px;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-text);
+  font-size: 13px;
+  color: var(--text);
   outline: none;
-  transition: border-color var(--transition-ui);
+  transition: border-color var(--transition), background var(--transition);
 }
-#search-input:focus { border-color: var(--color-primary); }
-#search-input::placeholder { color: var(--color-text-faint); }
+#search-input:focus {
+  border-color: var(--primary);
+  background: var(--surface-3);
+}
+#search-input::placeholder { color: var(--text-faint); }
+#search-icon {
+  position: absolute;
+  left: 26px;
+  top: 23px;
+  width: 16px;
+  height: 16px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+#search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 12px;
+  right: 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+}
+#search-dropdown.visible { display: block; }
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+.search-result:last-child { border-bottom: none; }
+.search-result:hover, .search-result.active {
+  background: var(--primary-dim);
+}
+.search-result .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.search-result .name {
+  font-size: 13px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-result .ticker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.search-result .sector-tag {
+  font-size: 10px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* 業種フィルター */
-#sector-filter {
-  display: flex; gap: var(--space-2); flex-wrap: wrap;
-  padding: var(--space-4) var(--space-8);
-  max-width: calc(100vw - 200px);
+#sector-section {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
 }
-.sector-chip {
-  display: inline-flex; align-items: center; gap: var(--space-1);
-  background: var(--color-surface);
-  backdrop-filter: blur(var(--panel-blur));
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
+#sector-section .section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#sector-section .section-title .count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  font-weight: 400;
+}
+.sector-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition-ui);
+  transition: background var(--transition);
   user-select: none;
+  margin-bottom: 2px;
 }
-.sector-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
-.sector-chip:hover { border-color: var(--color-text-muted); color: var(--color-text); }
-.sector-chip.active {
-  border-color: var(--color-primary);
-  color: var(--color-text);
-  background: var(--color-primary-dim);
+.sector-item:hover { background: rgba(255,255,255,0.04); }
+.sector-item .dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.sector-item .label {
+  font-size: 13px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sector-item .count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.sector-item.off .dot { opacity: 0.25; }
+.sector-item.off .label { color: var(--text-faint); }
+.sector-item.off .count { opacity: 0.4; }
+
+/* 表示オプション */
+#options-section {
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#options-section .section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.option-row:last-child { margin-bottom: 0; }
+.option-row .opt-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.option-row .opt-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--primary);
+  min-width: 50px;
+  text-align: right;
+}
+
+/* トグルスイッチ */
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: var(--text-faint);
+  border-radius: 50%;
+  transition: all var(--transition);
+}
+.toggle.on {
+  background: var(--primary-dim);
+  border-color: var(--primary);
+}
+.toggle.on::after {
+  left: 18px;
+  background: var(--primary);
+}
+
+/* スライダー */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--primary-glow);
+}
+.slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* ========== メインエリア ========== */
+#main {
+  flex: 1;
+  position: relative;
+  background: var(--bg-canvas);
+  overflow: hidden;
+}
+#canvas-container {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+canvas { display: block; }
+
+/* サイドバー開閉ボタン */
+#sidebar-toggle {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 30;
+  width: 34px;
+  height: 34px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  backdrop-filter: blur(8px);
+}
+#sidebar-toggle:hover {
+  color: var(--text);
+  border-color: var(--border-light);
+  background: var(--surface-2);
+}
+#sidebar-toggle svg {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--transition);
+}
+#sidebar-toggle.collapsed svg { transform: rotate(180deg); }
+
+/* ツールチップ */
+#tooltip {
+  position: absolute;
+  z-index: 40;
+  pointer-events: none;
+  background: var(--surface-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-lg);
+  display: none;
+  max-width: 260px;
+}
+#tooltip.visible { display: block; }
+#tooltip .tt-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+#tooltip .tt-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+#tooltip .tt-meta .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+#tooltip .tt-mcap {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--primary);
+  margin-top: 4px;
+  font-weight: 600;
+}
+#tooltip .tt-deg {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-top: 2px;
 }
 
 /* 情報パネル */
 #info-panel {
   position: absolute;
-  bottom: var(--space-8);
-  left: var(--space-8);
+  bottom: 20px;
+  left: 20px;
+  z-index: 25;
   width: 380px;
-  background: rgba(20, 26, 38, 0.92);
-  backdrop-filter: blur(var(--panel-blur));
-  border: 1px solid var(--color-border);
-  border-radius: var(--panel-radius);
-  padding: var(--space-4) var(--space-6);
+  background: rgba(13, 20, 32, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
   display: none;
+  box-shadow: var(--shadow-lg);
 }
 #info-panel.visible { display: block; }
-#info-panel h3 {
-  font-size: var(--text-lg);
+#info-panel .ip-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+#info-panel .ip-name {
+  font-size: 18px;
   font-weight: 700;
-  margin-bottom: var(--space-1);
-  color: var(--color-text);
+  color: var(--text);
+  line-height: 1.3;
 }
-#info-panel .meta {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-3);
-  display: flex; gap: var(--space-4);
+#info-panel .ip-close {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px;
+  flex-shrink: 0;
+  transition: color var(--transition);
 }
-#info-panel .sector-badge {
-  display: inline-flex; align-items: center; gap: var(--space-1);
-  font-size: var(--text-xs);
-  padding: 2px var(--space-2);
+#info-panel .ip-close:hover { color: var(--text); }
+#info-panel .ip-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+#info-panel .ip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 3px 8px;
   border-radius: 4px;
-  background: rgba(255,255,255,0.06);
 }
-#info-panel .mcap {
+#info-panel .ip-badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+#info-panel .ip-badge.mono { font-family: var(--font-mono); }
+#info-panel .ip-mcap {
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--color-accent-blue);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 14px;
+}
+#info-panel .ip-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+#info-panel .ip-connections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+#info-panel .ip-conn-group {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+#info-panel .ip-conn-group .cg-title {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+#info-panel .ip-conn-group .cg-title b {
+  font-family: var(--font-mono);
+  color: var(--primary);
   font-weight: 600;
 }
-#info-panel .connections {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  margin-top: var(--space-2);
-  line-height: 1.8;
+#info-panel .ip-conn-list {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
 }
-#info-panel .connections b { color: var(--color-text); font-weight: 600; }
-#info-close {
-  position: absolute; top: var(--space-3); right: var(--space-3);
-  background: none; border: none; color: var(--color-text-faint);
-  font-size: var(--text-lg); cursor: pointer; line-height: 1;
+#info-panel .ip-conn-list .conn-name {
+  color: var(--text);
+  cursor: pointer;
+  transition: color var(--transition);
 }
-#info-close:hover { color: var(--color-text); }
+#info-panel .ip-conn-list .conn-name:hover { color: var(--primary); }
 
 /* 操作ヒント */
 #controls-hint {
   position: absolute;
-  bottom: var(--space-8);
-  right: var(--space-8);
+  bottom: 20px;
+  right: 20px;
+  z-index: 20;
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-faint);
+  font-size: 11px;
+  color: var(--text-faint);
   text-align: right;
-  line-height: 1.8;
+  line-height: 1.9;
+  pointer-events: none;
 }
 #controls-hint kbd {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--color-border);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 1px 6px;
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  font-size: 10px;
+  color: var(--text-muted);
 }
 
 /* ローディング */
 #loading {
-  position: fixed; inset: 0; z-index: 100;
-  background: var(--color-bg);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: var(--space-4);
-  transition: opacity 600ms ease;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  transition: opacity 500ms ease;
 }
 #loading.hidden { opacity: 0; pointer-events: none; }
 #loading .title {
-  font-size: var(--text-2xl);
+  font-size: 26px;
   font-weight: 700;
-  color: var(--color-text);
-  letter-spacing: 0.04em;
+  color: var(--text);
+  letter-spacing: 0.03em;
 }
 #loading .sub {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 #loading .bar {
-  width: 200px; height: 2px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 1px;
+  width: 220px;
+  height: 3px;
+  background: var(--surface-3);
+  border-radius: 2px;
   overflow: hidden;
+  margin-top: 8px;
 }
 #loading .bar::after {
-  content: ''; display: block; height: 100%;
-  background: var(--color-primary);
-  animation: pulse 1.4s ease-in-out infinite;
+  content: '';
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #818CF8);
+  animation: slide 1.6s ease-in-out infinite;
 }
-@keyframes pulse {
-  0%, 100% { transform: translateX(-100%); width: 40%; }
-  50% { transform: translateX(150%); width: 60%; }
+@keyframes slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
 }
 
-/* 凡例 */
-#legend {
+/* 統計バッジ（右上） */
+#stats-badge {
   position: absolute;
-  top: 50%;
-  right: var(--space-8);
-  transform: translateY(-50%);
-  background: rgba(20, 26, 38, 0.85);
-  backdrop-filter: blur(var(--panel-blur));
-  border: 1px solid var(--color-border);
-  border-radius: var(--panel-radius);
-  padding: var(--space-3) var(--space-4);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  display: flex; flex-direction: column; gap: var(--space-1);
+  top: 16px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
 }
-#legend .legend-title {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
+#stats-badge .badge {
+  background: rgba(13, 20, 32, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+#stats-badge .badge .b-label {
+  font-size: 9px;
+  color: var(--text-faint);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-faint);
-  margin-bottom: var(--space-1);
 }
-#legend .legend-item {
-  display: flex; align-items: center; gap: var(--space-2);
-}
-#legend .legend-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  flex-shrink: 0;
+#stats-badge .badge .b-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
 }
 
-@media (max-width: 768px) {
-  #header { padding: var(--space-4) var(--space-4); flex-wrap: wrap; }
-  #header .stats { display: none; }
-  #search-bar { padding: 0 var(--space-4); }
-  #search-input { width: 100%; flex: 1; }
-  #sector-filter { padding: var(--space-2) var(--space-4); }
-  #info-panel { left: var(--space-4); right: var(--space-4); width: auto; bottom: var(--space-4); }
+/* レスポンシブ */
+@media (max-width: 900px) {
+  #sidebar { width: 260px; min-width: 260px; }
+  #sidebar.collapsed { margin-left: -260px; }
+  #info-panel { left: 12px; right: 12px; width: auto; bottom: 12px; }
   #controls-hint { display: none; }
-  #legend { top: auto; bottom: var(--space-4); right: var(--space-4); transform: none; max-height: 40vh; overflow-y: auto; }
-  #header .stats { margin-right: 0; }
-  #sector-filter { max-width: 100vw; }
+  #stats-badge { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>
 </head>
 <body>
+
 <div id="loading">
   <div class="title">サイバー経済マップ</div>
   <div class="sub">Cyber Economy Map — Loading Network</div>
   <div class="bar"></div>
 </div>
-<div id="canvas-container"></div>
-<div id="ui-overlay">
-  <header id="header">
-    <h1>サイバー経済マップ</h1>
-    <div class="subtitle">Cyber Economy Map</div>
-    <div class="stats">
-      <span>企業 <b id="stat-nodes">0</b></span>
-      <span>関係 <b id="stat-edges">0</b></span>
-      <span>業種 <b id="stat-sectors">0</b></span>
+
+<div id="app">
+  <aside id="sidebar">
+    <div id="sidebar-header">
+      <h1>サイバー経済マップ</h1>
+      <div class="sub">JP Listed · Supply Chain Graph</div>
+      <div class="stats-row">
+        <div class="stat">
+          <span class="label">企業</span>
+          <span class="value" id="stat-total">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">関係</span>
+          <span class="value" id="stat-edges">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">表示中</span>
+          <span class="value" id="stat-visible">0</span>
+        </div>
+      </div>
     </div>
-  </header>
-  <div id="search-bar">
-    <input type="text" id="search-input" placeholder="企業名・ティッカーで検索 (例: トヨタ, 7203)" autocomplete="off">
-  </div>
-  <div id="sector-filter"></div>
-  <div id="info-panel">
-    <button id="info-close" aria-label="閉じる">×</button>
-    <h3 id="info-name"></h3>
-    <div class="meta">
-      <span id="info-ticker"></span>
-      <span id="info-sector"></span>
+
+    <div id="search-section">
+      <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.3-4.3"></path>
+      </svg>
+      <input type="text" id="search-input" placeholder="企業名・ティッカーで検索" autocomplete="off" spellcheck="false">
+      <div id="search-dropdown"></div>
     </div>
-    <div class="mcap" id="info-mcap"></div>
-    <div class="connections" id="info-connections"></div>
-  </div>
-  <div id="legend">
-    <div class="legend-title">業種</div>
-    <div id="legend-items"></div>
-  </div>
-  <div id="controls-hint">
-    <div><kbd>ドラッグ</kbd> 回転 &nbsp; <kbd>スクロール</kbd> ズーム</div>
-    <div><kbd>ノードクリック</kbd> 詳細 &nbsp; <kbd>ダブルクリック</kbd> フォーカス</div>
-  </div>
+
+    <div id="sector-section">
+      <div class="section-title">
+        業種フィルター
+        <span class="count" id="sector-count"></span>
+      </div>
+      <div id="sector-list"></div>
+    </div>
+
+    <div id="options-section">
+      <div class="section-title">表示設定</div>
+      <div class="option-row">
+        <span class="opt-label">接続のある企業のみ</span>
+        <div class="toggle on" id="toggle-connected" role="switch" aria-checked="true" tabindex="0"></div>
+      </div>
+      <div class="option-row">
+        <span class="opt-label">最小時価総額</span>
+        <span class="opt-value" id="mcap-value">0億</span>
+      </div>
+      <input type="range" class="slider" id="mcap-slider" min="0" max="5000" step="50" value="0" aria-label="最小時価総額">
+      <div class="option-row" style="margin-top:14px;">
+        <span class="opt-label">主要企業ラベル</span>
+        <div class="toggle on" id="toggle-labels" role="switch" aria-checked="true" tabindex="0"></div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="main">
+    <button id="sidebar-toggle" aria-label="サイドバー開閉">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m15 18-6-6 6-6"></path>
+      </svg>
+    </button>
+
+    <div id="stats-badge">
+      <div class="badge">
+        <span class="b-label">Nodes</span>
+        <span class="b-value" id="badge-nodes">0</span>
+      </div>
+      <div class="badge">
+        <span class="b-label">Edges</span>
+        <span class="b-value" id="badge-edges">0</span>
+      </div>
+    </div>
+
+    <div id="canvas-container"></div>
+    <div id="tooltip"></div>
+
+    <div id="info-panel">
+      <div class="ip-header">
+        <div class="ip-name" id="ip-name"></div>
+        <button class="ip-close" id="ip-close" aria-label="閉じる">×</button>
+      </div>
+      <div class="ip-meta" id="ip-meta"></div>
+      <div class="ip-mcap" id="ip-mcap"></div>
+      <div class="ip-section-title">接続関係</div>
+      <div class="ip-connections">
+        <div class="ip-conn-group">
+          <div class="cg-title">親会社 <b id="ip-parents-count">0</b></div>
+          <div class="ip-conn-list" id="ip-parents"></div>
+        </div>
+        <div class="ip-conn-group">
+          <div class="cg-title">子会社・関連 <b id="ip-children-count">0</b></div>
+          <div class="ip-conn-list" id="ip-children"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="controls-hint">
+      <div><kbd>ドラッグ</kbd> 回転 · <kbd>スクロール</kbd> ズーム · <kbd>右ドラッグ</kbd> 移動</div>
+      <div><kbd>クリック</kbd> 詳細 · <kbd>ダブルクリック</kbd> フォーカス</div>
+    </div>
+  </main>
 </div>
 
 <script type="module">
 import * as THREE from 'https://esm.sh/three@0.160.0';
 import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-import { EffectComposer } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-// ---------- 状態 ----------
+// ============================================================
+// 状態
+// ============================================================
 let graph = null;
-let nodeIndex = new Map();
+let nodeById = new Map();
+let degreeMap = new Map();
 let activeSectors = new Set();
-let selectedNode = null;
-let highlightedNodes = new Set();
-let raycaster, mouse;
+let showConnectedOnly = true;
+let minMcap = 0;
+let showLabels = true;
 
-// ---------- DOM ----------
+let visibleNodeIds = new Set();
+let visibleMeshes = [];
+let labelSprites = [];
+let edgeLines = null;
+let selectedNodeId = null;
+let hoveredInstanceId = -1;
+
+// ============================================================
+// DOM
+// ============================================================
 const $ = (id) => document.getElementById(id);
 const loadingEl = $('loading');
+const sidebarEl = $('sidebar');
 const searchInput = $('search-input');
-const sectorFilter = $('sector-filter');
-const infoPanel = $('info-panel');
+const searchDropdown = $('search-dropdown');
+const sectorListEl = $('sector-list');
+const tooltipEl = $('tooltip');
+const infoPanelEl = $('info-panel');
 
-// ---------- Three.js 初期化 ----------
+// ============================================================
+// Three.js 初期化
+// ============================================================
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0a0e17, 0.004);
+scene.fog = new THREE.FogExp2(0x04070C, 0.0035);
 
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
-camera.position.set(0, 40, 200);
+const camera = new THREE.PerspectiveCamera(55, 1, 1, 3000);
+camera.position.set(0, 60, 220);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 1.1;
 $('canvas-container').appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.06;
-controls.rotateSpeed = 0.6;
-controls.minDistance = 30;
-controls.maxDistance = 600;
-
-// ポストプロセッシング（ブルーム）
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-const bloomPass = new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.6, 0.4, 0.85
-);
-composer.addPass(bloomPass);
+controls.dampingFactor = 0.08;
+controls.rotateSpeed = 0.55;
+controls.minDistance = 20;
+controls.maxDistance = 800;
 
 // ライト
-scene.add(new THREE.AmbientLight(0x404860, 2.0));
-const pointLight = new THREE.PointLight(0x4af0c0, 1.5, 500);
-pointLight.position.set(0, 0, 0);
-scene.add(pointLight);
+scene.add(new THREE.AmbientLight(0x3B4A6B, 2.2));
+const keyLight = new THREE.DirectionalLight(0xFFFFFF, 1.4);
+keyLight.position.set(100, 150, 100);
+scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0x22D3EE, 0.5);
+fillLight.position.set(-100, -50, -100);
+scene.add(fillLight);
 
-// 背景の星（パーティクル）
+// 背景の微細パーティクル（奥行き感）
 const starGeo = new THREE.BufferGeometry();
-const starCount = 2000;
+const starCount = 1200;
 const starPos = new Float32Array(starCount * 3);
 for (let i = 0; i < starCount; i++) {
-  starPos[i * 3] = (Math.random() - 0.5) * 800;
-  starPos[i * 3 + 1] = (Math.random() - 0.5) * 800;
-  starPos[i * 3 + 2] = (Math.random() - 0.5) * 800;
+  starPos[i*3]   = (Math.random() - 0.5) * 900;
+  starPos[i*3+1] = (Math.random() - 0.5) * 900;
+  starPos[i*3+2] = (Math.random() - 0.5) * 900;
 }
 starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-const starMat = new THREE.PointsMaterial({
-  color: 0x3a4460, size: 1.2, sizeAttenuation: true,
-  transparent: true, opacity: 0.6,
-});
-scene.add(new THREE.Points(starGeo, starMat));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+  color: 0x2A3A5C, size: 1.0, sizeAttenuation: true,
+  transparent: true, opacity: 0.45, depthWrite: false,
+}));
+scene.add(stars);
 
-// ---------- ノード・エッジ ----------
-let nodeMeshes = [];
-let edgeLines = null;
-let nodeGroup = new THREE.Group();
-scene.add(nodeGroup);
+// ============================================================
+// ノード用 InstancedMesh（高パフォーマンス）
+// ============================================================
+const SPHERE_SEG = 10;
+const sphereGeo = new THREE.SphereGeometry(1, SPHERE_SEG, SPHERE_SEG);
+let nodeMesh = null;      // InstancedMesh
+let nodeDataList = [];     // instanceId → node data
 
-// ---------- データロード ----------
+// ラベル用スプライト
+const labelGroup = new THREE.Group();
+scene.add(labelGroup);
+
+// エッジ
+let edgeGroup = new THREE.Group();
+scene.add(edgeGroup);
+
+// ============================================================
+// データロード
+// ============================================================
 async function loadData() {
   const res = await fetch('./data/graph.json');
   graph = await res.json();
-  buildNetwork();
-  buildUI();
+
+  // インデックス構築
+  for (const n of graph.nodes) {
+    nodeById.set(n.id, n);
+  }
+  // 次数計算
+  for (const e of graph.edges) {
+    degreeMap.set(e.src, (degreeMap.get(e.src) || 0) + 1);
+    degreeMap.set(e.dst, (degreeMap.get(e.dst) || 0) + 1);
+  }
+
+  buildSidebarUI();
+  applyFilters();
+  setupLabels();
   loadingEl.classList.add('hidden');
   animate();
 }
 
-function buildNetwork() {
-  // ノード
-  const sphereGeo = new THREE.SphereGeometry(1, 12, 10);
-  nodeMeshes = graph.nodes.map((n) => {
-    const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(n.color),
-      emissive: new THREE.Color(n.color).multiplyScalar(0.3),
-      roughness: 0.5, metalness: 0.1,
-      transparent: true, opacity: 0.9,
+// ============================================================
+// サイドバーUI構築
+// ============================================================
+function buildSidebarUI() {
+  $('stat-total').textContent = graph.nodes.length.toLocaleString();
+  $('stat-edges').textContent = graph.edges.length.toLocaleString();
+
+  // 業種リスト
+  const sectorCount = {};
+  for (const n of graph.nodes) {
+    sectorCount[n.sector] = (sectorCount[n.sector] || 0) + 1;
+  }
+  const sectors = Object.entries(sectorCount).sort((a, b) => b[1] - a[1]);
+
+  sectorListEl.innerHTML = '';
+  for (const [sector, count] of sectors) {
+    activeSectors.add(sector);
+    const color = graph.nodes.find(n => n.sector === sector)?.color || '#64748B';
+    const item = document.createElement('div');
+    item.className = 'sector-item';
+    item.dataset.sector = sector;
+    item.innerHTML = `
+      <span class="dot" style="background:${color}"></span>
+      <span class="label">${sector}</span>
+      <span class="count">${count}</span>
+    `;
+    item.addEventListener('click', () => {
+      if (activeSectors.has(sector)) {
+        activeSectors.delete(sector);
+        item.classList.add('off');
+      } else {
+        activeSectors.add(sector);
+        item.classList.remove('off');
+      }
+      applyFilters();
     });
-    const mesh = new THREE.Mesh(sphereGeo, mat);
-    mesh.position.set(n.x, n.y, n.z);
-    mesh.scale.setScalar(n.size * 0.5);
-    mesh.userData = { node: n };
-    nodeGroup.add(mesh);
-    nodeIndex.set(n.id, mesh);
-    return mesh;
+    sectorListEl.appendChild(item);
+  }
+  $('sector-count').textContent = `${sectors.length} 業種`;
+}
+
+// ============================================================
+// フィルタ適用（ノード可視性 + エッジ再構築）
+// ============================================================
+function applyFilters() {
+  if (!graph) return;
+
+  // 可視ノード決定
+  visibleNodeIds = new Set();
+  for (const n of graph.nodes) {
+    if (!activeSectors.has(n.sector)) continue;
+    if (showConnectedOnly && (degreeMap.get(n.id) || 0) === 0) continue;
+    if (n.mcap < minMcap * 1e8) continue;
+    visibleNodeIds.add(n.id);
+  }
+
+  // 既存のInstancedMeshを破棄
+  if (nodeMesh) {
+    scene.remove(nodeMesh);
+    nodeMesh.geometry.dispose();
+    nodeMesh.material.dispose();
+    nodeMesh = null;
+  }
+  nodeDataList = [];
+  visibleMeshes = [];
+
+  // 可視ノード配列
+  const visNodes = graph.nodes.filter(n => visibleNodeIds.has(n.id));
+
+  if (visNodes.length === 0) {
+    updateStats(0, 0);
+    rebuildEdges();
+    return;
+  }
+
+  // InstancedMesh作成
+  const mat = new THREE.MeshStandardMaterial({
+    roughness: 0.45,
+    metalness: 0.15,
+  });
+  nodeMesh = new THREE.InstancedMesh(sphereGeo, mat, visNodes.length);
+  nodeMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+  const dummy = new THREE.Object3D();
+  const color = new THREE.Color();
+
+  visNodes.forEach((n, i) => {
+    dummy.position.set(n.x, n.y, n.z);
+    // サイズ: mcapの対数スケール（0.6〜3.2）
+    const mcapN = n.mcap > 0 ? Math.log10(n.mcap / 1e8) : 0; // 億円単位のlog
+    const size = 0.6 + Math.max(0, mcapN) * 0.28;
+    dummy.scale.setScalar(size);
+    dummy.updateMatrix();
+    nodeMesh.setMatrixAt(i, dummy.matrix);
+
+    color.set(n.color);
+    nodeMesh.setColorAt(i, color);
+
+    nodeDataList.push(n);
+    visibleMeshes.push(i);
   });
 
-  // エッジ（LineSegments）
-  const edgePositions = [];
-  const edgeColors = [];
+  nodeMesh.instanceMatrix.needsUpdate = true;
+  if (nodeMesh.instanceColor) nodeMesh.instanceColor.needsUpdate = true;
+
+  // レイキャスト用にユーザーデータ設定
+  nodeMesh.userData = { type: 'nodes' };
+  scene.add(nodeMesh);
+
+  // 統計更新
+  let visEdgeCount = 0;
   for (const e of graph.edges) {
-    const srcMesh = nodeIndex.get(e.src);
-    const dstMesh = nodeIndex.get(e.dst);
-    if (!srcMesh || !dstMesh) continue;
-    const s = srcMesh.position, d = dstMesh.position;
-    edgePositions.push(s.x, s.y, s.z, d.x, d.y, d.z);
-    // 色は薄い青（薄く）
-    const alpha = e.share ? Math.min(0.6, e.share / 50 + 0.1) : 0.15;
-    edgeColors.push(0.2, 0.5, 0.9, 0.2, 0.5, 0.9);
+    if (visibleNodeIds.has(e.src) && visibleNodeIds.has(e.dst)) visEdgeCount++;
   }
-  const edgeGeo = new THREE.BufferGeometry();
-  edgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
-  edgeGeo.setAttribute('color', new THREE.Float32BufferAttribute(edgeColors, 3));
-  edgeLines = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({
+  updateStats(visNodes.length, visEdgeCount);
+
+  rebuildEdges();
+  updateLabels();
+}
+
+function updateStats(nodeCount, edgeCount) {
+  $('stat-visible').textContent = nodeCount.toLocaleString();
+  $('badge-nodes').textContent = nodeCount.toLocaleString();
+  $('badge-edges').textContent = edgeCount.toLocaleString();
+}
+
+// ============================================================
+// エッジ再構築
+// ============================================================
+function rebuildEdges() {
+  if (edgeLines) {
+    edgeGroup.remove(edgeLines);
+    edgeLines.geometry.dispose();
+    edgeLines.material.dispose();
+    edgeLines = null;
+  }
+  if (!graph || visibleNodeIds.size === 0) return;
+
+  const positions = [];
+  const colors = [];
+
+  for (const e of graph.edges) {
+    const s = nodeById.get(e.src);
+    const d = nodeById.get(e.dst);
+    if (!s || !d) continue;
+    if (!visibleNodeIds.has(e.src) || !visibleNodeIds.has(e.dst)) continue;
+
+    positions.push(s.x, s.y, s.z, d.x, d.y, d.z);
+
+    // shareがあれば濃く、なければ薄く
+    const share = e.share || 0;
+    const alpha = share > 0 ? Math.min(0.55, 0.15 + share / 200) : 0.10;
+    // 青紫系のリンク色
+    colors.push(
+      0.15 * alpha * 5, 0.45 * alpha * 5, 0.85 * alpha * 5,
+      0.15 * alpha * 5, 0.45 * alpha * 5, 0.85 * alpha * 5
+    );
+  }
+
+  if (positions.length === 0) return;
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+  edgeLines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
     vertexColors: true,
-    transparent: true, opacity: 0.25,
+    transparent: true,
+    opacity: 0.35,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   }));
-  scene.add(edgeLines);
+  edgeLines.renderOrder = 100;  // ラベル(2000)より手前にならないように低く
+
+  edgeGroup.add(edgeLines);
 }
 
-// ---------- UI構築 ----------
-function buildUI() {
-  $('stat-nodes').textContent = graph.nodes.length.toLocaleString();
-  $('stat-edges').textContent = graph.edges.length.toLocaleString();
-  const sectors = new Set(graph.nodes.map(n => n.sector));
-  $('stat-sectors').textContent = sectors.size;
+// ============================================================
+// 主要企業ラベル（スプライト）
+// ============================================================
+function makeLabelSprite(text, color) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
-  // 業種チップ
-  sectorFilter.innerHTML = '';
-  for (const s of sectors) {
-    const chip = document.createElement('div');
-    chip.className = 'sector-chip active';
-    chip.dataset.sector = s;
-    const color = graph.nodes.find(n => n.sector === s)?.color || '#888';
-    chip.innerHTML = `<span class="dot" style="background:${color}"></span>${s}`;
-    chip.addEventListener('click', () => toggleSector(s, chip));
-    sectorFilter.appendChild(chip);
-    activeSectors.add(s);
-  }
+  const fontSize = 48;
+  const padding = 16;
+  ctx.font = `700 ${fontSize}px 'Noto Sans JP', sans-serif`;
+  const textWidth = ctx.measureText(text).width;
+  canvas.width = Math.ceil(textWidth + padding * 2);
+  canvas.height = fontSize + padding * 2;
 
-  // 凡例
-  const legendItems = $('legend-items');
-  for (const s of sectors) {
-    const color = graph.nodes.find(n => n.sector === s)?.color || '#888';
-    const item = document.createElement('div');
-    item.className = 'legend-item';
-    item.innerHTML = `<span class="legend-dot" style="background:${color}"></span>${s}`;
-    legendItems.appendChild(item);
+  // 背景（完全に不透明・矩形で全面塗りつぶし）
+  ctx.fillStyle = '#0A0E16';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 左側に太い色バー（業種色）
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, 10, canvas.height);
+
+  // 右側に細い枠線
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+
+  // テキスト（白色で高コントラスト、影付き）
+  ctx.font = `700 ${fontSize}px 'Noto Sans JP', sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  // 影
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetX = 1;
+  ctx.shadowOffsetY = 1;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
+  // 影リセット
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+
+  const mat = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,   // 透明パスで描画（renderOrderで最前面に）
+    opacity: 1.0,
+    depthTest: false,     // 常に手前に表示
+    depthWrite: false,
+    alphaTest: 0.1,
+  });
+
+  const sprite = new THREE.Sprite(mat);
+  const worldScale = 0.06;
+  sprite.scale.set(canvas.width * worldScale, canvas.height * worldScale, 1);
+  sprite.renderOrder = 2000;  // エッジ(1000)より後
+
+  return sprite;
+}
+
+function setupLabels() {
+  labelGroup.clear();
+  labelSprites = [];
+  updateLabels();
+}
+
+function updateLabels() {
+  labelGroup.clear();
+  labelSprites = [];
+  if (!showLabels || !graph) return;
+
+  // カメラ距離に応じてラベル数を調整（近い=少なく、遠い=多く）
+  const camDist = camera.position.distanceTo(controls.target);
+  let maxLabels = 40;
+  if (camDist < 80) maxLabels = 15;      // ズームイン時は少なく
+  else if (camDist < 150) maxLabels = 25;
+  else if (camDist < 250) maxLabels = 35;
+
+  // 上位企業（時価総額 + 次数の複合スコア）
+  const scored = graph.nodes
+    .filter(n => visibleNodeIds.has(n.id) && n.mcap > 0)
+    .map(n => ({
+      node: n,
+      score: Math.log10(n.mcap) * 2 + (degreeMap.get(n.id) || 0) * 0.5,
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxLabels);
+
+  // ラベルの重複回避: 3D空間で近いラベルを間引く
+  const minDist = 18;  // 最小距離（ワールド単位）— 広めに取って重複防止
+  const placed = [];
+
+  for (const { node } of scored) {
+    // 既に配置されたラベルと近すぎる場合はスキップ
+    let tooClose = false;
+    for (const p of placed) {
+      const dx = node.x - p.x;
+      const dy = node.y - p.y;
+      const dz = node.z - p.z;
+      if (dx*dx + dy*dy + dz*dz < minDist * minDist) {
+        tooClose = true;
+        break;
+      }
+    }
+    if (tooClose) continue;
+    placed.push({ x: node.x, y: node.y, z: node.z });
+
+    const sprite = makeLabelSprite(node.name, node.color);
+    const mcapN = node.mcap > 0 ? Math.log10(node.mcap / 1e8) : 0;
+    const size = 0.6 + Math.max(0, mcapN) * 0.28;
+    sprite.position.set(node.x, node.y + size + 2.5, node.z);
+    sprite.renderOrder = 2000;
+    sprite.userData = { nodeId: node.id };
+    labelGroup.add(sprite);
+    labelSprites.push(sprite);
   }
 }
 
-function toggleSector(sector, chip) {
-  if (activeSectors.has(sector)) {
-    activeSectors.delete(sector);
-    chip.classList.remove('active');
-  } else {
-    activeSectors.add(sector);
-    chip.classList.add('active');
-  }
-  applyFilter();
-}
+// ============================================================
+// 検索
+// ============================================================
+let searchResults = [];
+let searchActiveIndex = -1;
 
-function applyFilter() {
-  for (const mesh of nodeMeshes) {
-    const n = mesh.userData.node;
-    const visible = activeSectors.has(n.sector);
-    mesh.visible = visible;
-  }
-  // エッジも再計算（簡易的に全部表示のまま、または非表示ノードのエッジを隠す）
-  // パフォーマンスのためエッジは全体表示のまま
-}
-
-// ---------- 検索 ----------
 searchInput.addEventListener('input', (e) => {
   const q = e.target.value.trim().toLowerCase();
-  if (q.length < 1) { resetHighlight(); return; }
-  const matches = graph.nodes.filter(n =>
-    n.name.toLowerCase().includes(q) || n.ticker.toLowerCase().includes(q)
-  ).slice(0, 20);
-  highlightNodes(matches);
+  if (q.length < 1) {
+    searchDropdown.classList.remove('visible');
+    searchResults = [];
+    return;
+  }
+
+  searchResults = graph.nodes
+    .filter(n =>
+      n.name.toLowerCase().includes(q) ||
+      (n.ticker && n.ticker.toLowerCase().includes(q))
+    )
+    .sort((a, b) => (b.mcap || 0) - (a.mcap || 0))
+    .slice(0, 8);
+
+  searchActiveIndex = -1;
+  renderSearchDropdown();
 });
 
-function resetHighlight() {
-  for (const mesh of nodeMeshes) {
-    mesh.material.opacity = 0.9;
-    mesh.material.emissiveIntensity = 1;
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (searchResults.length > 0) {
+      searchActiveIndex = Math.min(searchActiveIndex + 1, searchResults.length - 1);
+      renderSearchDropdown();
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (searchResults.length > 0) {
+      searchActiveIndex = Math.max(searchActiveIndex - 1, 0);
+      renderSearchDropdown();
+    }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (searchActiveIndex >= 0 && searchActiveIndex < searchResults.length) {
+      selectAndFocus(searchResults[searchActiveIndex]);
+    } else if (searchResults.length > 0) {
+      selectAndFocus(searchResults[0]);
+    }
+  } else if (e.key === 'Escape') {
+    searchInput.value = '';
+    searchDropdown.classList.remove('visible');
+    searchInput.blur();
   }
-  highlightedNodes.clear();
+});
+
+function renderSearchDropdown() {
+  if (searchResults.length === 0) {
+    searchDropdown.classList.remove('visible');
+    return;
+  }
+  searchDropdown.innerHTML = '';
+  searchResults.forEach((n, i) => {
+    const item = document.createElement('div');
+    item.className = 'search-result' + (i === searchActiveIndex ? ' active' : '');
+    item.innerHTML = `
+      <span class="dot" style="background:${n.color}"></span>
+      <span class="name">${n.name}</span>
+      <span class="sector-tag">${n.sector}</span>
+      <span class="ticker">${n.ticker || ''}</span>
+    `;
+    item.addEventListener('click', () => selectAndFocus(n));
+    searchDropdown.appendChild(item);
+  });
+  searchDropdown.classList.add('visible');
 }
 
-function highlightNodes(nodes) {
-  resetHighlight();
-  const ids = new Set(nodes.map(n => n.id));
-  for (const mesh of nodeMeshes) {
-    if (!ids.has(mesh.userData.node.id)) {
-      mesh.material.opacity = 0.15;
-      mesh.material.emissiveIntensity = 0.3;
-    } else {
-      mesh.material.opacity = 1.0;
-      mesh.material.emissiveIntensity = 2.5;
-      highlightedNodes.add(mesh);
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#search-section')) {
+    searchDropdown.classList.remove('visible');
+  }
+});
+
+function selectAndFocus(node) {
+  searchDropdown.classList.remove('visible');
+  searchInput.value = node.name;
+  searchInput.blur();
+
+  // 業種フィルタをリセットしてこのノードを確実に表示
+  if (!activeSectors.has(node.sector)) {
+    activeSectors.add(node.sector);
+    const item = sectorListEl.querySelector(`[data-sector="${CSS.escape(node.sector)}"]`);
+    if (item) item.classList.remove('off');
+  }
+  if (showConnectedOnly && (degreeMap.get(node.id) || 0) === 0) {
+    // 孤立ノードなら一時的に表示
+    showConnectedOnly = false;
+    $('toggle-connected').classList.remove('on');
+    applyFilters();
+  }
+  if (node.mcap < minMcap * 1e8) {
+    minMcap = 0;
+    $('mcap-slider').value = 0;
+    $('mcap-value').textContent = '0億';
+    applyFilters();
+  }
+
+  // カメラ移動
+  const mesh = nodeMesh;
+  if (mesh) {
+    const idx = nodeDataList.findIndex(n => n.id === node.id);
+    if (idx >= 0) {
+      const target = new THREE.Vector3(node.x, node.y, node.z);
+      animateCameraTo(target);
     }
   }
+
+  showInfoPanel(node);
+  highlightNode(node.id);
 }
-
-// ---------- クリック処理 ----------
-raycaster = new THREE.Raycaster();
-mouse = new THREE.Vector2();
-
-renderer.domElement.addEventListener('click', (e) => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(nodeMeshes.filter(m => m.visible));
-  if (intersects.length > 0) {
-    selectNode(intersects[0].object.userData.node);
-  }
-});
-
-renderer.domElement.addEventListener('dblclick', (e) => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(nodeMeshes.filter(m => m.visible));
-  if (intersects.length > 0) {
-    const mesh = intersects[0].object;
-    const target = mesh.position.clone();
-    animateCameraTo(target);
-  }
-});
 
 function animateCameraTo(target) {
   const start = camera.position.clone();
-  const dist = 80;
-  const dir = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+  const startTarget = controls.target.clone();
+  const dist = 50;
+  const dir = new THREE.Vector3()
+    .subVectors(camera.position, controls.target)
+    .normalize();
   const end = target.clone().add(dir.multiplyScalar(dist));
+
   const startTime = performance.now();
-  const duration = 1200;
+  const duration = 1000;
 
   function step(now) {
     const t = Math.min(1, (now - startTime) / duration);
-    const ease = 1 - Math.pow(1 - t, 3);
+    const ease = 1 - Math.pow(1 - t, 4);
     camera.position.lerpVectors(start, end, ease);
-    controls.target.lerpVectors(controls.target, target, ease);
+    controls.target.lerpVectors(startTarget, target, ease);
     if (t < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
 }
 
-function selectNode(node) {
-  selectedNode = node;
-  $('info-name').textContent = node.name;
-  $('info-ticker').textContent = node.ticker ? `Ticker: ${node.ticker}` : '';
-  $('info-sector').innerHTML = `<span class="sector-badge"><span class="dot" style="background:${node.color};width:8px;height:8px;border-radius:50%;display:inline-block"></span>${node.sector}</span>`;
-  const mcapY = node.mcap / 1e12;
-  const mcapOku = node.mcap / 1e8;
-  $('info-mcap').textContent = node.mcap > 0 ?
-    (mcapY >= 1 ? `時価総額 ¥${mcapY.toFixed(2)}兆` : `時価総額 ¥${Math.round(mcapOku).toLocaleString()}億`) : '';
+// ============================================================
+// ハイライト
+// ============================================================
+function highlightNode(nodeId) {
+  selectedNodeId = nodeId;
+  if (!nodeMesh) return;
 
-  // 接続数
-  const inEdges = graph.edges.filter(e => e.dst === node.id);
-  const outEdges = graph.edges.filter(e => e.src === node.id);
-  const parents = inEdges.filter(e => e.type === 'ownership_parent_of');
-  const children = outEdges.filter(e => e.type === 'ownership_parent_of');
-  const suppliers = outEdges.filter(e => e.type === 'supply_buyer_of');
-  const buyers = inEdges.filter(e => e.type === 'supply_buyer_of');
-  $('info-connections').innerHTML = `
-    <b>親会社</b> ${parents.length}社 &nbsp; <b>子会社</b> ${children.length}社<br>
-    <b>供給先</b> ${suppliers.length}社 &nbsp; <b>仕入先</b> ${buyers.length}社
-  `;
-  infoPanel.classList.add('visible');
+  // 隣接ノード
+  const neighbors = new Set([nodeId]);
+  for (const e of graph.edges) {
+    if (e.src === nodeId) neighbors.add(e.dst);
+    if (e.dst === nodeId) neighbors.add(e.src);
+  }
 
-  // 隣接ノードをハイライト
-  const neighborIds = new Set();
-  for (const e of inEdges) neighborIds.add(e.src);
-  for (const e of outEdges) neighborIds.add(e.dst);
-  neighborIds.add(node.id);
-  const nodesToHighlight = graph.nodes.filter(n => neighborIds.has(n.id));
-  highlightNodes(nodesToHighlight);
+  const color = new THREE.Color();
+  const dimColor = new THREE.Color(0x1A2332);
+
+  nodeDataList.forEach((n, i) => {
+    if (neighbors.has(n.id)) {
+      color.set(n.color);
+    } else {
+      color.copy(dimColor);
+    }
+    nodeMesh.setColorAt(i, color);
+  });
+  nodeMesh.instanceColor.needsUpdate = true;
 }
 
-$('info-close').addEventListener('click', () => {
-  infoPanel.classList.remove('visible');
-  selectedNode = null;
+function resetHighlight() {
+  selectedNodeId = null;
+  if (!nodeMesh) return;
+  const color = new THREE.Color();
+  nodeDataList.forEach((n, i) => {
+    color.set(n.color);
+    nodeMesh.setColorAt(i, color);
+  });
+  nodeMesh.instanceColor.needsUpdate = true;
+}
+
+// ============================================================
+// 情報パネル
+// ============================================================
+function showInfoPanel(node) {
+  $('ip-name').textContent = node.name;
+
+  const metaEl = $('ip-meta');
+  metaEl.innerHTML = '';
+
+  if (node.ticker) {
+    const badge = document.createElement('span');
+    badge.className = 'ip-badge mono';
+    badge.textContent = node.ticker;
+    metaEl.appendChild(badge);
+  }
+  const sectorBadge = document.createElement('span');
+  sectorBadge.className = 'ip-badge';
+  sectorBadge.innerHTML = `<span class="dot" style="background:${node.color}"></span>${node.sector}`;
+  metaEl.appendChild(sectorBadge);
+
+  const deg = degreeMap.get(node.id) || 0;
+  const degBadge = document.createElement('span');
+  degBadge.className = 'ip-badge mono';
+  degBadge.textContent = `接続 ${deg}`;
+  metaEl.appendChild(degBadge);
+
+  // 時価総額
+  const mcapEl = $('ip-mcap');
+  if (node.mcap > 0) {
+    const t = node.mcap / 1e12;
+    const oku = node.mcap / 1e8;
+    mcapEl.textContent = t >= 1
+      ? `時価総額 ¥${t.toFixed(2)}兆`
+      : `時価総額 ¥${Math.round(oku).toLocaleString()}億`;
+  } else {
+    mcapEl.textContent = '';
+  }
+
+  // 親会社・子会社
+  const parents = [];
+  const children = [];
+  for (const e of graph.edges) {
+    if (e.type === 'ownership_parent_of') {
+      if (e.dst === node.id) parents.push({ node: nodeById.get(e.src), share: e.share });
+      if (e.src === node.id) children.push({ node: nodeById.get(e.dst), share: e.share });
+    }
+  }
+  parents.sort((a, b) => (b.share || 0) - (a.share || 0));
+  children.sort((a, b) => (b.share || 0) - (a.share || 0));
+
+  $('ip-parents-count').textContent = parents.length;
+  $('ip-children-count').textContent = children.length;
+
+  const parentsEl = $('ip-parents');
+  parentsEl.innerHTML = parents.length === 0
+    ? '<span style="color:var(--text-faint)">—</span>'
+    : parents.slice(0, 5).map(p =>
+        `<div class="conn-name" data-id="${p.node.id}">${p.node.name}${p.share ? ` <span style="color:var(--text-faint);font-size:10px">(${p.share.toFixed(1)}%)</span>` : ''}</div>`
+      ).join('') + (parents.length > 5 ? `<div style="color:var(--text-faint);font-size:11px">+${parents.length - 5}社</div>` : '');
+
+  const childrenEl = $('ip-children');
+  childrenEl.innerHTML = children.length === 0
+    ? '<span style="color:var(--text-faint)">—</span>'
+    : children.slice(0, 5).map(c =>
+        `<div class="conn-name" data-id="${c.node.id}">${c.node.name}${c.share ? ` <span style="color:var(--text-faint);font-size:10px">(${c.share.toFixed(1)}%)</span>` : ''}</div>`
+      ).join('') + (children.length > 5 ? `<div style="color:var(--text-faint);font-size:11px">+${children.length - 5}社</div>` : '');
+
+  // 接続企業クリックで移動
+  for (const el of infoPanelEl.querySelectorAll('.conn-name')) {
+    el.addEventListener('click', () => {
+      const target = nodeById.get(el.dataset.id);
+      if (target) selectAndFocus(target);
+    });
+  }
+
+  infoPanelEl.classList.add('visible');
+}
+
+$('ip-close').addEventListener('click', () => {
+  infoPanelEl.classList.remove('visible');
+  selectedNodeId = null;
   resetHighlight();
 });
 
-// ---------- アニメーション ----------
+// ============================================================
+// レイキャスト（ホバー・クリック）
+// ============================================================
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let pointerMoved = false;
+
+renderer.domElement.addEventListener('pointermove', (e) => {
+  pointer.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+  pointer.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+  pointerMoved = true;
+
+  // ツールチップ位置
+  tooltipEl.style.left = (e.clientX + 14) + 'px';
+  tooltipEl.style.top = (e.clientY - 10) + 'px';
+});
+
+function updateHover() {
+  if (!nodeMesh || !pointerMoved) return;
+  pointerMoved = false;
+
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObject(nodeMesh);
+
+  if (hits.length > 0) {
+    const instanceId = hits[0].instanceId;
+    if (instanceId !== undefined && instanceId < nodeDataList.length) {
+      const node = nodeDataList[instanceId];
+      hoveredInstanceId = instanceId;
+
+      // ツールチップ表示
+      const t = node.mcap > 0 ? node.mcap / 1e12 : 0;
+      const oku = node.mcap / 1e8;
+      tooltipEl.innerHTML = `
+        <div class="tt-name">${node.name}</div>
+        <div class="tt-meta">
+          <span class="dot" style="background:${node.color}"></span>
+          <span>${node.sector}</span>
+          ${node.ticker ? `<span>·</span><span>${node.ticker}</span>` : ''}
+        </div>
+        ${node.mcap > 0 ? `<div class="tt-mcap">${t >= 1 ? `¥${t.toFixed(2)}兆` : `¥${Math.round(oku).toLocaleString()}億`}</div>` : ''}
+        <div class="tt-deg">接続 ${degreeMap.get(node.id) || 0}件</div>
+      `;
+      tooltipEl.classList.add('visible');
+      renderer.domElement.style.cursor = 'pointer';
+      return;
+    }
+  }
+
+  tooltipEl.classList.remove('visible');
+  renderer.domElement.style.cursor = 'auto';
+  hoveredInstanceId = -1;
+}
+
+renderer.domElement.addEventListener('click', (e) => {
+  if (!nodeMesh) return;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObject(nodeMesh);
+  if (hits.length > 0 && hits[0].instanceId !== undefined) {
+    const node = nodeDataList[hits[0].instanceId];
+    if (node) {
+      showInfoPanel(node);
+      highlightNode(node.id);
+    }
+  } else {
+    infoPanelEl.classList.remove('visible');
+    resetHighlight();
+  }
+});
+
+renderer.domElement.addEventListener('dblclick', (e) => {
+  if (!nodeMesh) return;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObject(nodeMesh);
+  if (hits.length > 0 && hits[0].instanceId !== undefined) {
+    const node = nodeDataList[hits[0].instanceId];
+    if (node) {
+      const target = new THREE.Vector3(node.x, node.y, node.z);
+      animateCameraTo(target);
+    }
+  }
+});
+
+// ============================================================
+// UIイベント
+// ============================================================
+$('sidebar-toggle').addEventListener('click', () => {
+  sidebarEl.classList.toggle('collapsed');
+  $('sidebar-toggle').classList.toggle('collapsed');
+  setTimeout(() => onResize(), 200);
+});
+
+// 接続のみトグル
+const toggleConnected = $('toggle-connected');
+function toggleConnectedHandler() {
+  showConnectedOnly = !showConnectedOnly;
+  toggleConnected.classList.toggle('on', showConnectedOnly);
+  toggleConnected.setAttribute('aria-checked', String(showConnectedOnly));
+  applyFilters();
+}
+toggleConnected.addEventListener('click', toggleConnectedHandler);
+toggleConnected.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleConnectedHandler(); }
+});
+
+// 最小時価総額スライダー
+const mcapSlider = $('mcap-slider');
+mcapSlider.addEventListener('input', (e) => {
+  minMcap = parseInt(e.target.value, 10);
+  $('mcap-value').textContent = minMcap === 0 ? '0億' : `${minMcap}億`;
+  applyFilters();
+});
+
+// ラベルトグル
+const toggleLabels = $('toggle-labels');
+function toggleLabelsHandler() {
+  showLabels = !showLabels;
+  toggleLabels.classList.toggle('on', showLabels);
+  toggleLabels.setAttribute('aria-checked', String(showLabels));
+  updateLabels();
+}
+toggleLabels.addEventListener('click', toggleLabelsHandler);
+toggleLabels.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleLabelsHandler(); }
+});
+
+// ============================================================
+// アニメーションループ
+// ============================================================
 let time = 0;
+let lastLabelUpdate = 0;
 function animate() {
   requestAnimationFrame(animate);
   time += 0.016;
   controls.update();
+  updateHover();
+  stars.rotation.y += 0.00015;
 
-  // 選択中のノードをパルス
-  if (selectedNode) {
-    const mesh = nodeIndex.get(selectedNode.id);
-    if (mesh && mesh.visible) {
-      const pulse = 1 + Math.sin(time * 4) * 0.15;
-      mesh.scale.setScalar(selectedNode.size * 0.5 * pulse);
+  // カメラ移動時にラベルを間引き表示（LOD）
+  if (time - lastLabelUpdate > 1.0 && showLabels) {
+    const camDist = camera.position.distanceTo(controls.target);
+    // 現在のラベル数と目標ラベル数の差が大きい場合のみ更新
+    const targetLabels = camDist < 80 ? 15 : camDist < 150 ? 25 : camDist < 250 ? 35 : 40;
+    if (Math.abs(labelSprites.length - targetLabels) > 5) {
+      updateLabels();
     }
+    lastLabelUpdate = time;
   }
 
-  // 星をゆっくり回転
-  starGeo.rotateY(0.0002);
-
-  composer.render();
+  renderer.render(scene, camera);
 }
 
-// ---------- リサイズ ----------
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+// ============================================================
+// リサイズ
+// ============================================================
+function onResize() {
+  const w = renderer.domElement.parentElement.clientWidth;
+  const h = renderer.domElement.parentElement.clientHeight;
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
-});
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
 
-// ---------- 起動 ----------
+// ============================================================
+// 起動
+// ============================================================
+onResize();
 loadData();
 </script>
 </body>

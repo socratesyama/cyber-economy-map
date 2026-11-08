@@ -1,0 +1,200 @@
+{
+  "backtest_date": "2026-11-09",
+  "events": {
+    "suez_2021": {
+      "event_id": "suez_2021",
+      "predictions": {
+        "global_trade_reduction_pct": 0.2,
+        "shipping_cost_increase_pct": 15.0,
+        "japan_trade_impact_billion_yen": 85.44,
+        "oil_price_change_pct": 4.2
+      },
+      "actuals": {
+        "global_trade_reduction_pct": 0.2,
+        "shipping_cost_increase_pct": 15.0,
+        "japan_trade_impact_billion_yen": 86.0,
+        "oil_price_change_pct": 5.0
+      },
+      "comparisons": {
+        "global_trade_reduction_pct": {
+          "predicted": 0.2,
+          "actual": 0.2,
+          "error_pct": 1.0,
+          "ratio": 1.01
+        },
+        "shipping_cost_increase_pct": {
+          "predicted": 15.0,
+          "actual": 15.0,
+          "error_pct": 0.0,
+          "ratio": 1.0
+        },
+        "japan_trade_impact_billion_yen": {
+          "predicted": 85.44,
+          "actual": 86.0,
+          "error_pct": 0.7,
+          "ratio": 0.993
+        },
+        "oil_price_change_pct": {
+          "predicted": 4.2,
+          "actual": 5.0,
+          "error_pct": 16.0,
+          "ratio": 0.84
+        }
+      }
+    },
+    "thai_flood_2011": {
+      "event_id": "thai_flood_2011",
+      "predictions": {
+        "hdd_production_drop_pct": 28.0,
+        "hdd_price_increase_pct": 44.1,
+        "pc_shipment_impact_million_units": 7.0,
+        "japan_auto_production_impact_pct": 3.36
+      },
+      "actuals": {
+        "hdd_production_drop_pct": 28.0,
+        "hdd_price_increase_pct": 28.0,
+        "pc_shipment_impact_million_units": 3.8,
+        "japan_auto_production_impact_pct": 5.0
+      },
+      "comparisons": {
+        "hdd_production_drop_pct": {
+          "predicted": 28.0,
+          "actual": 28.0,
+          "error_pct": 0.0,
+          "ratio": 1.0
+        },
+        "hdd_price_increase_pct": {
+          "predicted": 44.1,
+          "actual": 28.0,
+          "error_pct": 57.5,
+          "ratio": 1.575
+        },
+        "pc_shipment_impact_million_units": {
+          "predicted": 7.0,
+          "actual": 3.8,
+          "error_pct": 84.2,
+          "ratio": 1.842
+        },
+        "japan_auto_production_impact_pct": {
+          "predicted": 3.36,
+          "actual": 5.0,
+          "error_pct": 32.8,
+          "ratio": 0.672
+        }
+      }
+    },
+    "ukraine_2022": {
+      "event_id": "ukraine_2022",
+      "predictions": {
+        "lng_price_increase_pct": 200.0,
+        "japan_lng_import_cost_increase_pct": 60.0,
+        "japan_fossil_fuel_import_trillion_yen": 28.9,
+        "japan_cpi_energy_increase_pct": 20.0,
+        "japan_gdp_impact_pct": -0.2,
+        "utility_net_loss_count": 5
+      },
+      "actuals": {
+        "lng_price_increase_pct": 300.0,
+        "japan_lng_import_cost_increase_pct": 98.0,
+        "japan_fossil_fuel_import_trillion_yen": 33.7,
+        "japan_cpi_energy_increase_pct": 20.0,
+        "japan_gdp_impact_pct": -0.2,
+        "utility_net_loss_count": 9
+      },
+      "comparisons": {
+        "lng_price_increase_pct": {
+          "predicted": 200.0,
+          "actual": 300.0,
+          "error_pct": 33.3,
+          "ratio": 0.667
+        },
+        "japan_lng_import_cost_increase_pct": {
+          "predicted": 60.0,
+          "actual": 98.0,
+          "error_pct": 38.8,
+          "ratio": 0.612
+        },
+        "japan_fossil_fuel_import_trillion_yen": {
+          "predicted": 28.9,
+          "actual": 33.7,
+          "error_pct": 14.2,
+          "ratio": 0.858
+        },
+        "japan_cpi_energy_increase_pct": {
+          "predicted": 20.0,
+          "actual": 20.0,
+          "error_pct": 0.0,
+          "ratio": 1.0
+        },
+        "japan_gdp_impact_pct": {
+          "predicted": -0.2,
+          "actual": -0.2,
+          "error_pct": 0.0,
+          "ratio": 1.0
+        },
+        "utility_net_loss_count": {
+          "predicted": 5,
+          "actual": 9,
+          "error_pct": 44.4,
+          "ratio": 0.556
+        }
+      }
+    }
+  },
+  "calibration": {
+    "original_params": {
+      "chokepoint_mitigation_factor": 0.5,
+      "chokepoint_shipping_elasticity": 0.8,
+      "entity_production_share_factor": 0.4,
+      "entity_price_elasticity": 0.7,
+      "commodity_cpi_pass_through": 0.4,
+      "commodity_gdp_multiplier": 1.0
+    },
+    "calibrated_params": {
+      "chokepoint_mitigation_factor": 0.5,
+      "chokepoint_shipping_elasticity": 1.6667,
+      "entity_production_share_factor": 0.4,
+      "entity_price_elasticity": 1.575,
+      "commodity_cpi_pass_through": 2.0,
+      "commodity_gdp_multiplier": 0.0926
+    },
+    "iterations": [
+      {
+        "iteration": 1,
+        "avg_error_pct": 100.5,
+        "params": {
+          "chokepoint_mitigation_factor": 0.5,
+          "chokepoint_shipping_elasticity": 0.8,
+          "entity_production_share_factor": 0.4,
+          "entity_price_elasticity": 0.7,
+          "commodity_cpi_pass_through": 0.4,
+          "commodity_gdp_multiplier": 1.0
+        }
+      },
+      {
+        "iteration": 2,
+        "avg_error_pct": 30.5,
+        "params": {
+          "chokepoint_mitigation_factor": 0.5,
+          "chokepoint_shipping_elasticity": 1.6667,
+          "entity_production_share_factor": 0.5952,
+          "entity_price_elasticity": 1.05,
+          "commodity_cpi_pass_through": 2.0,
+          "commodity_gdp_multiplier": 0.0926
+        }
+      },
+      {
+        "iteration": 3,
+        "avg_error_pct": 23.1,
+        "params": {
+          "chokepoint_mitigation_factor": 0.5,
+          "chokepoint_shipping_elasticity": 1.6667,
+          "entity_production_share_factor": 0.4,
+          "entity_price_elasticity": 1.575,
+          "commodity_cpi_pass_through": 2.0,
+          "commodity_gdp_multiplier": 0.0926
+        }
+      }
+    ]
+  }
+}

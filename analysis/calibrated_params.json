@@ -1,0 +1,8 @@
+{
+  "chokepoint_mitigation_factor": 0.5,
+  "chokepoint_shipping_elasticity": 1.666666666666667,
+  "entity_production_share_factor": 0.3999680025597952,
+  "entity_price_elasticity": 1.5749999999999997,
+  "commodity_cpi_pass_through": 2.0,
+  "commodity_gdp_multiplier": 0.09259259259259259
+}
