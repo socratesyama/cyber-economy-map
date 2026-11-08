@@ -26,38 +26,41 @@ def load_graph():
     for r in con.execute("SELECT company_id, market_cap_jpy FROM market_snapshot"):
         if r["company_id"] in nodes and r["market_cap_jpy"]:
             nodes[r["company_id"]]["mcap"] = r["market_cap_jpy"]
-    edges = defaultdict(list)  # src_id -> [(dst_id, type, confidence)]
+    edges = defaultdict(list)  # src_id -> [(dst_id, type, confidence, share_pct or None)]
     for r in con.execute("SELECT * FROM relation WHERE relation_type='ownership_parent_of'"):
-        edges[r["src_id"]].append((r["dst_id"], r["relation_type"], r["confidence"]))
-        # 資本の逆方向（子→親は親の損失が子に波及する意味で双方向に弱く伝播）
-        edges[r["dst_id"]].append((r["src_id"], "ownership_child_of", r["confidence"] * 0.5))
+        edges[r["src_id"]].append((r["dst_id"], r["relation_type"], r["confidence"], r["share_pct"]))
+        # 資本の逆方向（子の損失が親に及ぶ・弱め）
+        edges[r["dst_id"]].append((r["src_id"], "ownership_child_of", r["confidence"] * 0.5, r["share_pct"]))
     return nodes, edges
 
 def propagate(nodes, edges, seed_id, rng, n_iter=1000):
-    """DebtRank風カスケード + モンテカルロ。loss率の分布を返す。"""
+    """DebtRank式伝播。各ノードは「未伝播の損失增量」だけ一度だけ拡散する
+    （フロー会計: 同じ損失が同じエッジを二度流れない → 二重計上なし）。"""
     results = defaultdict(list)
     for it in range(n_iter):
         loss = {seed_id: 1.0}
+        h = {seed_id: 1.0}          # 未伝播の増分
         active = {seed_id}
-        round_no = 0
-        while active and round_no < 10:
+        while active:
             nxt = set()
             for i in list(active):
-                for (j, rtype, conf) in edges[i]:
-                    # observed_binary: 依存度は未観測 → デモ用事前分布 Beta(1,3)
-                    dep = rng.betavariate(1, 3)
-                    p = conf * min(1, dep / 0.05)
-                    if rng.random() > p: continue
-                    if rtype == "ownership_parent_of":
-                        s = dep * 0.5          # 親の損失が子の価値を毀損
+                hi = h.get(i, 0.0)
+                h[i] = 0.0
+                if hi <= 1e-9: continue
+                for (j, rtype, conf, spct) in edges[i]:
+                    if spct is not None:
+                        dep = min(1.0, spct / 100.0)
                     else:
-                        s = dep * 0.3          # 子の損失が親に及ぶ（持分経由・弱め）
-                    new = loss.get(j, 0.0) + s * loss[i] * (1 - loss.get(j, 0.0))
-                    if new > loss.get(j, 0.0) + 1e-6:
-                        loss[j] = min(1.0, new)
+                        dep = rng.betavariate(1, 3)   # 未観測 → デモ用事前分布
+                    p = conf * min(1.0, dep / 0.05)
+                    if rng.random() > p: continue
+                    s = dep * (0.5 if rtype == "ownership_parent_of" else 0.3)
+                    add = s * hi * (1.0 - loss.get(j, 0.0))
+                    if add > 1e-6:
+                        loss[j] = loss.get(j, 0.0) + add
+                        h[j] = h.get(j, 0.0) + add
                         nxt.add(j)
             active = nxt
-            round_no += 1
         for cid, l in loss.items():
             results[cid].append(l)
     return results

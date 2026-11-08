@@ -24,9 +24,10 @@
 | 日本上場企業 3,893社（JPX） | ✅ ノード化済み |
 | 時価総額 3,701社（Yahoo） | ✅ |
 | 財務（売上・従業員等）1,421社 | ✅（残りはEDINET取得後に置換） |
-| 資本関係エッジ 1,999本（Wikidata） | ✅ |
-| EDINET有報XBRL（大株主・主要仕入先・地域別売上） | ⏳ 無料APIキー登録待ち（`scripts/fetch_edinet.py` 実装済み） |
-| OECD ICIO・UN Comtrade・資源価格 | Phase 2 |
+| 資本関係エッジ（Wikidata） | ✅ 1,999本（tier 3・observed_binary） |
+| EDINET有報XBRL（大株主・財務・関係会社） | ✅ **tier 1 取得済み**: 2,245社分の有報CSVを解析。大株主 21,528件（うち3,780本の資本エッジは持分比率observed_value）、連結財務 2,147社（IFRS/GAAP自動判別） |
+| OECD ICIO 2023（Layer A・国×産業連関） | ✅ 2020年表: 3,465ノード、40万係数（`data/icio2020_coeff.npz`） |
+| UN Comtrade・資源価格・運河・為替 | Phase 2（スキーマ実装済み） |
 
 `db/cybermap.sqlite` に全データ格納（5,529社・23テーブル）。
 
