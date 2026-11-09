@@ -14,8 +14,10 @@ python3 scripts/export_workbench.py
 cd viz
 corepack enable
 pnpm install
-pnpm dev
+VITE_GIT_SHA="$(git rev-parse HEAD)" pnpm dev
 ```
+
+このrevision指定はクリーンなコミット作業ツリーで使ってください。未commit変更がある状態でHEADのSHAを渡すと実ソースを特定できません。環境変数を渡さない起動ではBundleに`unversioned-local-source`と記録します。GitHub Actionsはビルド対象のcommit SHAを設定します。
 
 `pnpm build`で静的なWebアプリを生成します。`pnpm test`は条件計算の再現性や入力条件の整合を確認し、`pnpm check`はTypeScript型検査・モデル試験・本番ビルドをまとめて実行します。リポジトリrootでは`python3 -m unittest discover -s tests -p 'test_*.py'`も実行できます。これらの試験通過は、実体経済予測の検証・的中率を意味しません。
 

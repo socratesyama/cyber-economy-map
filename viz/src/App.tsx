@@ -14,6 +14,8 @@ import { WorldMap } from './WorldMap';
 import { RippleGlyph } from './RippleGlyph';
 
 const MODEL_VERSION = '0.1.0';
+const SOURCE_REVISION = import.meta.env.VITE_GIT_SHA || 'unversioned-local-source';
+const DISPLAY_REVISION = SOURCE_REVISION === 'unversioned-local-source' ? 'unversioned' : SOURCE_REVISION.slice(0, 12);
 const ENERGY_SECTORS = new Set(['B05_06']);
 const NO_IMPACTS: IndustryImpact[] = [];
 const NAV = [
@@ -279,7 +281,7 @@ function ScenarioAnalysis({
     if (!result) return;
     const { selectedEvent, modeledProxy, ...assumptions } = result.input;
     const bundle: ScenarioBundle = {
-      schemaVersion: 'ripple-scenario/1.3', codeRevision: __RIPPLE_SOURCE_REVISION__, modelVersion: MODEL_VERSION,
+      schemaVersion: 'ripple-scenario/1.3', codeRevision: SOURCE_REVISION, modelVersion: MODEL_VERSION,
       datasetSnapshot: snapshot.manifest.datasetSnapshot,
       datasetGeneratedAt: snapshot.manifest.generatedAt,
       datasetChecksumsSha256: snapshot.manifest.checksumsSha256,
@@ -426,7 +428,7 @@ function ScenarioAnalysis({
             <FindingLine label="想定事象" value={result.input.selectedEvent.label} />
             <FindingLine label="計算したproxy" value={result.input.modeledProxy.label} />
             <FindingLine label="データ" value="OECD ICIO 2020 · ICIO係数固定" />
-            <FindingLine label="コードrevision" value={__RIPPLE_SOURCE_REVISION__.slice(0, 12)} />
+            <FindingLine label="コードrevision" value={DISPLAY_REVISION} />
             <FindingLine label="再現seed" value={String(result.input.seed)} />
             <FindingLine label="感度試行" value={`${result.summary.samples} draws / 一様入力感度`} />
             <FindingLine label="入力前提" value={result.input.seedNodes.length > 8 ? `${result.input.seedNodes.length} seed nodes` : result.input.seedNodes.join(', ')} />
