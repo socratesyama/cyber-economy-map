@@ -1,7 +1,7 @@
-# Archived 3D prototype
+# Historical 3D viewer and data snapshot
 
-This folder preserves the earlier standalone Three.js view and the data exports it consumed. It is not loaded by the current Vite application under `viz/`. Its company ownership graph, proxy edges, firm-level loss values, random completion of missing exposures, market-cap scaling and layout are historical prototype behavior—not observed procurement flows, validated economic losses or forecast evidence.
+This folder preserves a copy of the earlier standalone Three.js viewer and its data exports. The active static viewer under `viz/` was restored to the application tree from commit `9563fef`; this archive copy is not loaded by it. `scripts/export_viz.py` writes active viewer data to `viz/data/`.
 
-The current 2D corporate mesh reuses only the archived listed-company IDs and x/y/z display positions as a deterministic PCA layout. It does not export historical market values, node sizes, colors or edge payloads. The source relation table retains 5,836 evidence records / 5,573 unique pairs. Only 2,002 pairs have both endpoints in the 3,893-company displayed population; the other 3,571 off-mesh pairs are not assigned invented coordinates. Capital relations never transmit shocks in the current input-output model.
+The historical graph, proxy edges, firm-level loss values, random completion of missing exposures, market-cap scaling and layout are prototype behavior—not observed procurement flows, validated economic losses or forecast evidence. The precomputed scenario outputs must not be interpreted as event probabilities, realized losses or calibrated forecasts.
 
-The current workbench and its model boundaries are documented in the repository-root `README.md`, `docs/data-sources.md` and `viz/src/`. `scripts/export_viz.py` can regenerate the old graph into this archive only; it must not be used as the current product data pipeline.
+The later React/TypeScript 2D prototype was removed from the active application tree during the requested rollback. Its design, data-provenance and Scenario Bundle documents are retained as historical/reference materials; they do not describe features of the active viewer.

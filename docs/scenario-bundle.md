@@ -1,6 +1,8 @@
 # Scenario Bundle schema: `ripple-scenario/1.3`
 
-RIPPLE exports a Scenario Bundle as JSON. The schema deliberately separates the **selected event context** from the **proxy input actually evaluated**. Selecting “大手銀行破綻” or “台湾海峡封鎖” does not mean that bank-credit or route-specific propagation was modeled.
+> **Historical specification:** this schema documents the later React/TypeScript prototype, which is no longer the active viewer after restoring `viz/` to the `9563fef` application state. The active legacy viewer reads precomputed `viz/data/scenarios.json` and does not export this `ripple-scenario/1.3` JSON/CSV format. This document is retained as a reference.
+
+The later React/TypeScript prototype exported a Scenario Bundle as JSON. Its schema deliberately separated the **selected event context** from the **proxy input actually evaluated**. Selecting “大手銀行破綻” or “台湾海峡封鎖” did not mean that bank-credit or route-specific propagation was modeled.
 
 ## Scenario fields
 
