@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""
+"""ARCHIVED research prototype—not validated forecasting evidence.
+
+Historical scenario values and helper calculations here are not a
+pre-registered empirical backtest, predictive-accuracy estimate, calibrated
+event probability, or calibrated default probability. This script is kept to
+make the earlier exploration auditable; it does not validate current RIPPLE.
+See the current method disclosure in ``viz/src/App.tsx``.
+
 バックテスト・キャリブレーション — 実際の過去イベントをエンジンに入力し、
 予測と実際の影響の乖離を測定してパラメータを調整する。
 
@@ -588,6 +595,14 @@ def save_results(output: dict, calibrated_params: dict):
 
 
 def main():
+    raise SystemExit(
+        "This is an archived, unvalidated calibration prototype and its CLI is disabled. "
+        "It does not estimate predictive accuracy, event probability, or company default probability. "
+        "See the current model limits in README.md."
+    )
+
+
+def _legacy_main():
     parser = argparse.ArgumentParser(description="バックテスト・キャリブレーション")
     parser.add_argument("--event", default="all", choices=list(ALL_EVENTS.keys()) + ["all"],
                        help="テストするイベントID (default: all)")

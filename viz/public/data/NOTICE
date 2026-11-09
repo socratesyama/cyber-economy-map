@@ -1,0 +1,7 @@
+RIPPLE code is licensed under Apache License 2.0 (see the repository LICENSE).
+
+That license does not relicense files generated under public/data. Exported company-master, filed relationship, OECD ICIO and port records remain subject to their own source terms. See ../../../docs/data-sources.md for source-specific attribution, data vintage, use restrictions and exclusions.
+
+Country boundary geometry is from Natural Earth, public domain. Credit: Made with Natural Earth (https://www.naturalearthdata.com/).
+
+Do not distribute this snapshot without regenerating it from authorized source data and observing the source-specific terms. The generator deliberately omits UN Comtrade transaction rows, World Bank price observations and shipping-route aggregates from the static bundle.

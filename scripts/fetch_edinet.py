@@ -4,7 +4,7 @@
 使い方:
   1. EDINET API利用者登録 (無料) で Subscription-Key を取得
      https://www.fsa.go.jp/opendata/ (EDINET API v2利用規約に同意して発行)
-  2. export EDINET_KEY="xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  2. export EDINET_API_KEY="<use a protected environment variable>"
   3. python3 fetch_edinet.py --start 2026-10-01 --end 2026-10-31 --download
 
 出力:
@@ -26,9 +26,9 @@ RAW = "../raw/edinet"
 DATA = "../data"
 
 def headers():
-    key = os.environ.get("EDINET_KEY")
+    key = os.environ.get("EDINET_API_KEY") or os.environ.get("EDINET_KEY")
     if not key:
-        sys.exit("EDINET_KEY 環境変数を設定してください（無料登録: https://www.fsa.go.jp/opendata/）")
+        sys.exit("EDINET_API_KEY 環境変数を保護された方法で設定してください（https://www.fsa.go.jp/opendata/）")
     return {"Ocp-Apim-Subscription-Key": key, "User-Agent": "CyberEconomyMap/0.1"}
 
 def fetch_json(url):

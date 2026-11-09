@@ -1,0 +1,5 @@
+RIPPLE source code added or modified for the open workbench is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Unless a file or record is specifically identified as redistributable, this license does not apply to third-party datasets, archived source data, generated data snapshots, company identities, disclosure-derived records, OECD tables, map sources, or other third-party materials. Those remain governed by their own source terms and rights. See docs/data-sources.md and source-specific notices before reuse or redistribution.
+
+Natural Earth is public domain under its published terms and is attributed separately. This NOTICE does not extend rights to any other dataset.

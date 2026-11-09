@@ -4,3 +4,15 @@ raw/edinet/xbrl/
 .DS_Store
 raw/edinet/csv/
 raw/icio/
+
+# RIPPLE / local development and secrets
+.env
+.env.*
+!.env.example
+.venv/
+node_modules/
+viz/dist/
+*.key
+/viz/public/data/*
+!/viz/public/data/NOTICE
+!/viz/public/data/.gitkeep

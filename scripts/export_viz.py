@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""ビジュアライゼーション用JSONエクスポート — Three.js 3Dネットワークビューア用.
+"""ARCHIVED legacy exporter — retained only for historical reproducibility.
 
-出力: viz/data/graph.json
+The current RIPPLE web interface does not load its 3D output. Do not interpret
+capital relations, proxy edges, market-cap sizing or layouts produced here as a
+validated supply-chain or economic-loss model. Current public UI data are built
+by ``scripts/export_workbench.py``.
+
+出力: archive/legacy-3d/data/graph.json
   nodes: company_id, name, sector, mcap, ticker, layer
   edges: src, dst, type (ownership_parent_of / supply_buyer_of), share_pct, confidence
   layout: 3D座標（業種クラスタ + 力学的レイアウト近似）
 """
 import json, sqlite3, math, random
 from collections import defaultdict
+from pathlib import Path
 
-DB = "../db/cybermap.sqlite"
-OUT = "../viz/data/graph.json"
+ROOT = Path(__file__).resolve().parents[1]
+DB = ROOT / "db" / "cybermap.sqlite"
+OUT = ROOT / "archive" / "legacy-3d" / "data" / "graph.json"
 
 con = sqlite3.connect(DB)
 con.row_factory = sqlite3.Row

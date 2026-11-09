@@ -1,0 +1,36 @@
+name: Reproducible build
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install snapshot dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-workbench.txt
+      - name: Rebuild data snapshot from checked-in source inputs
+        run: python scripts/export_workbench.py
+      - name: Validate provenance, checksums and flow data
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Enable the lockfile package manager
+        run: corepack enable && corepack prepare pnpm@11.25.0 --activate
+      - name: Install frontend dependencies
+        working-directory: viz
+        run: pnpm install --frozen-lockfile
+      - name: Test types, model and production build
+        working-directory: viz
+        env:
+          VITE_GIT_SHA: ${{ github.sha }}
+        run: pnpm check

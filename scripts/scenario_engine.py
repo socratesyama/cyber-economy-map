@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""What-if エンジン v2 — Layer F（企業）× Layer A（国×産業）統合伝播.
+"""ARCHIVED legacy prototype — do not use as the current RIPPLE engine.
+
+This file and its previous assumptions/outputs are preserved for code-history
+reproducibility. It is not used by the RIPPLE UI. Its firm-edge, monetary-loss
+and calibration logic is not a validated forecast or calibrated probability
+model. The active workbench logic is in ``viz/src/engine/`` and deliberately
+withholds company-loss and default-probability conclusions that its data cannot
+support.
+
+Historical what-if prototype v2 — Layer F（企業）× Layer A（国×産業）統合伝播.
 
 シナリオ:
   --scenario entity_failure --ticker 7203
@@ -22,6 +31,13 @@ v2 の変更点:
     IO平均係数を置換し、残りにだけIO係数を適用。
   - 出力: 各社の損失率の分布（P50/P90）、巻き込まれ確率
 """
+if __name__ == "__main__":
+    raise SystemExit(
+        "This is an archived, unvalidated prototype and its CLI is disabled. "
+        "It must not be interpreted as a corporate loss, bankruptcy, or economic forecast. "
+        "See the current scope and limitations in the repository-root README.md."
+    )
+
 import argparse, json, random, sqlite3, sys, datetime
 from collections import defaultdict
 from pathlib import Path
@@ -415,6 +431,14 @@ def export_presets(eng, iterations=200, out_path=VIZ_SCENARIOS):
 
 
 def main():
+    raise SystemExit(
+        "This is an archived, unvalidated prototype and its CLI is disabled. "
+        "It must not be interpreted as a corporate loss, bankruptcy, or economic forecast. "
+        "See the current scope and limitations in README.md."
+    )
+
+
+def _legacy_main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scenario", choices=["entity_failure", "war_blockade", "chokepoint", "oil_price", "port_closure"])
     ap.add_argument("--ticker"); ap.add_argument("--countries"); ap.add_argument("--stop-rate", type=float, default=0.8)

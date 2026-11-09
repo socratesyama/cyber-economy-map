@@ -1,6 +1,8 @@
 # Cloudflare Pages デプロイガイド
 
-サイバー経済マップの3DビューアをCloudflare Pagesにデプロイする方法を説明します。
+> **アーカイブ：このガイドは旧Three.js 3D viewer用で、現在のRIPPLEに適用できません。** 内容の`exit 0`手順では現行Vite appはビルドされず、masterへのpushで自動公開されるとみなさないでください。現行のローカルbuildは[README](../README.md)に記載し、ホスティングは明示的に選んでから別途設定します。
+
+このページは旧3Dビューアの歴史的記録として保管しています。
 
 ## 前提条件
 
