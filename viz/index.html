@@ -262,6 +262,171 @@ body {
 .sector-item.off .label { color: var(--text-faint); }
 .sector-item.off .count { opacity: 0.4; }
 
+/* What-if シミュレーション */
+#whatif-section {
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#whatif-section .section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#whatif-section .section-title .count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  font-weight: 400;
+}
+.wi-desc {
+  font-size: 11px;
+  color: var(--text-faint);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.wi-select-wrap select {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 12.5px;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B95A8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+.wi-select-wrap select:focus {
+  outline: 1px solid var(--primary);
+  border-color: var(--primary);
+}
+#whatif-result.hidden { display: none; }
+.wi-agg {
+  background: rgba(34, 211, 238, 0.06);
+  border: 1px solid rgba(34, 211, 238, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin: 10px 0;
+}
+.wi-agg-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 2px 0;
+}
+.wi-agg-label { font-size: 11px; color: var(--text-muted); }
+.wi-agg-value { font-family: var(--font-mono); font-size: 12px; color: var(--text); font-weight: 600; }
+.wi-agg-value.hot { color: #F87171; }
+.wi-sub {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin: 10px 0 4px;
+}
+.wi-co {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition);
+  user-select: none;
+}
+.wi-co:hover { background: rgba(255,255,255,0.05); }
+.wi-co .rank {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  width: 16px;
+  flex-shrink: 0;
+  text-align: right;
+}
+.wi-co .name {
+  font-size: 12px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wi-co .loss {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #FBBF24;
+  flex-shrink: 0;
+}
+.wi-clear {
+  width: 100%;
+  margin-top: 10px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 7px;
+  font-size: 11.5px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.wi-clear:hover { border-color: var(--text-muted); color: var(--text); }
+
+/* シナリオ凡例（キャンバス上） */
+#scenario-legend {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  background: rgba(6, 9, 15, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  z-index: 20;
+  pointer-events: none;
+  min-width: 170px;
+}
+#scenario-legend.hidden { display: none; }
+#scenario-legend .sl-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: 0.03em;
+}
+#scenario-legend .sl-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg,
+    #22D3EE 0%,
+    #3B82F6 18%,
+    #8B5CF6 36%,
+    #F59E0B 55%,
+    #F97316 72%,
+    #DC2626 90%,
+    #B91C1C 100%);
+}
+#scenario-legend .sl-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-faint);
+}
+
 /* 表示オプション */
 #options-section {
   padding: 14px 16px 16px;
@@ -447,6 +612,16 @@ canvas { display: block; }
   font-size: 10px;
   color: var(--text-faint);
   margin-top: 2px;
+}
+#tooltip .tt-loss {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #FBBF24;
+  margin-top: 4px;
+}
+#tooltip .tt-loss.dim {
+  color: var(--text-faint);
+  font-size: 10px;
 }
 
 /* 情報パネル */
@@ -721,6 +896,38 @@ canvas { display: block; }
       <div id="search-dropdown"></div>
     </div>
 
+    <div id="whatif-section">
+      <div class="section-title">
+        What-if シミュレーション
+        <span class="count" id="whatif-count"></span>
+      </div>
+      <div class="wi-desc">シナリオを選ぶと、サプライチェーンを通じた損失の伝播がノードの色で表示されます。</div>
+      <div class="wi-select-wrap">
+        <select id="whatif-select" aria-label="シナリオ選択">
+          <option value="">— シナリオを選択 —</option>
+        </select>
+      </div>
+      <div id="whatif-result" class="hidden">
+        <div class="wi-agg">
+          <div class="wi-agg-row">
+            <span class="wi-agg-label">影響企業</span>
+            <span class="wi-agg-value" id="wi-affected">—</span>
+          </div>
+          <div class="wi-agg-row">
+            <span class="wi-agg-label">平均損失</span>
+            <span class="wi-agg-value" id="wi-mean">—</span>
+          </div>
+          <div class="wi-agg-row">
+            <span class="wi-agg-label">総影響額</span>
+            <span class="wi-agg-value" id="wi-total">—</span>
+          </div>
+        </div>
+        <div class="wi-sub">影響が大きい企業 TOP 8</div>
+        <div id="wi-top"></div>
+        <button id="wi-clear" class="wi-clear">シナリオを解除</button>
+      </div>
+    </div>
+
     <div id="sector-section">
       <div class="section-title">
         業種フィルター
@@ -788,6 +995,16 @@ canvas { display: block; }
       </div>
     </div>
 
+    <div id="scenario-legend" class="hidden">
+      <div class="sl-title" id="sl-title">シナリオ</div>
+      <div class="sl-bar"></div>
+      <div class="sl-scale">
+        <span>±0%</span>
+        <span>損失 15%+</span>
+        <span>30%+</span>
+      </div>
+    </div>
+
     <div id="controls-hint">
       <div><kbd>ドラッグ</kbd> 回転 · <kbd>スクロール</kbd> ズーム · <kbd>右ドラッグ</kbd> 移動</div>
       <div><kbd>クリック</kbd> 詳細 · <kbd>ダブルクリック</kbd> フォーカス</div>
@@ -809,6 +1026,11 @@ let activeSectors = new Set();
 let showConnectedOnly = true;
 let minMcap = 0;
 let showLabels = true;
+
+// What-if シナリオ
+let scenarios = null;          // scenarios.json 全体
+let activeScenarioKey = null;  // 選択中シナリオキー
+let activeLossMap = null;      // {company_id: mean_loss}
 
 let visibleNodeIds = new Set();
 let visibleMeshes = [];
@@ -910,10 +1132,164 @@ async function loadData() {
   }
 
   buildSidebarUI();
+
+  // What-if シナリオ（失敗してもビューアは動作）
+  loadScenarios().catch(() => {});
+
   applyFilters();
   setupLabels();
   loadingEl.classList.add('hidden');
   animate();
+}
+
+// ============================================================
+// What-if シナリオ
+// ============================================================
+const HEAT_STOPS = [
+  [0.00, 0x22D3EE],
+  [0.18, 0x3B82F6],
+  [0.36, 0x8B5CF6],
+  [0.55, 0xF59E0B],
+  [0.72, 0xF97316],
+  [0.90, 0xDC2626],
+  [1.00, 0xB91C1C],
+];
+const heatColorTmp = new THREE.Color();
+const heatStopTmp = new THREE.Color();
+let heatMax = 0.30;  // シナリオごとの動的スケール上限
+
+function heatColor(loss, out) {
+  // loss: 0〜heatMax+ を t=0〜1 にマッピング
+  const t = Math.min(1, loss / heatMax);
+  for (let i = 0; i < HEAT_STOPS.length - 1; i++) {
+    const [t0, c0] = HEAT_STOPS[i];
+    const [t1, c1] = HEAT_STOPS[i + 1];
+    if (t <= t1) {
+      const f = t <= t0 ? 0 : (t - t0) / (t1 - t0);
+      out.setHex(c0);
+      heatStopTmp.setHex(c1);
+      out.lerp(heatStopTmp, f);
+      return out;
+    }
+  }
+  out.setHex(HEAT_STOPS[HEAT_STOPS.length - 1][1]);
+  return out;
+}
+
+async function loadScenarios() {
+  const res = await fetch('./data/scenarios.json');
+  scenarios = await res.json();
+  const sel = $('whatif-select');
+  const keys = Object.keys(scenarios.scenarios || {});
+  for (const k of keys) {
+    const s = scenarios.scenarios[k];
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = s.label || k;
+    sel.appendChild(opt);
+  }
+  $('whatif-count').textContent = `${keys.length}種`;
+  sel.addEventListener('change', () => {
+    if (sel.value) applyScenario(sel.value);
+    else clearScenario();
+  });
+}
+
+function applyScenario(key) {
+  if (!scenarios || !scenarios.scenarios[key]) return;
+  activeScenarioKey = key;
+  const s = scenarios.scenarios[key];
+  activeLossMap = s.loss_map || {};
+
+  // 動的ヒートスケール: シナリオ内最大損失（下限5%・上限30%）
+  let maxLoss = 0.05;
+  for (const v of Object.values(activeLossMap)) {
+    if (v > maxLoss) maxLoss = v;
+  }
+  heatMax = Math.min(0.30, maxLoss);
+  // 凡例のスケール表示を更新
+  const scaleEls = document.querySelectorAll('#scenario-legend .sl-scale span');
+  if (scaleEls.length === 3) {
+    scaleEls[1].textContent = `損失 ${Math.round(heatMax * 50)}%`;
+    scaleEls[2].textContent = `${Math.round(heatMax * 100)}%+`;
+  }
+
+  // 集計
+  const agg = s.aggregate || {};
+  const affected = agg.firms_affected_30pct ?? 0;
+  const meanPct = agg.mean_loss_all ?? 0;
+  const totalOku = agg.total_impact_oku ?? 0;
+  const totalT = totalOku / 10000;
+  $('wi-affected').textContent = `${Number(affected).toLocaleString()} / ${Number(agg.firms_total ?? 0).toLocaleString()}社`;
+  $('wi-mean').textContent = `${Number(meanPct).toFixed(2)}%`;
+  $('wi-mean').classList.add('hot');
+  $('wi-total').textContent = totalT >= 1
+    ? `${totalT.toFixed(1)}兆円`
+    : `${Math.round(totalOku).toLocaleString()}億円`;
+  $('wi-total').classList.add('hot');
+
+  // TOP 8
+  const topEl = $('wi-top');
+  topEl.innerHTML = '';
+  (s.companies || []).slice(0, 8).forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'wi-co';
+    row.innerHTML = `
+      <span class="rank">${i + 1}</span>
+      <span class="name" title="${c.name}">${c.name}</span>
+      <span class="loss">-${c.p_mean_pct}%</span>
+    `;
+    row.addEventListener('click', () => {
+      const node = nodeById.get(c.id);
+      if (node) selectAndFocus(node);
+    });
+    topEl.appendChild(row);
+  });
+
+  $('whatif-result').classList.remove('hidden');
+  $('sl-title').textContent = s.label || key;
+  $('scenario-legend').classList.remove('hidden');
+
+  applyScenarioColors();
+}
+
+function clearScenario() {
+  activeScenarioKey = null;
+  activeLossMap = null;
+  $('whatif-result').classList.add('hidden');
+  $('scenario-legend').classList.add('hidden');
+  $('wi-mean').classList.remove('hot');
+  $('wi-total').classList.remove('hot');
+  applyScenarioColors();
+}
+
+$('wi-clear').addEventListener('click', () => {
+  $('whatif-select').value = '';
+  clearScenario();
+});
+
+// ノード色を決定（シナリオ中は損失ヒート、通常時は業種色）
+const nodeColorTmp = new THREE.Color();
+function nodeColorFor(node, out) {
+  if (activeLossMap) {
+    const loss = activeLossMap[node.id];
+    if (loss !== undefined && loss > 0.002) {
+      return heatColor(loss, out);
+    }
+    // 影響なし: 業種色を暗く
+    out.set(node.color).multiplyScalar(0.28);
+    return out;
+  }
+  out.set(node.color);
+  return out;
+}
+
+function applyScenarioColors() {
+  if (!nodeMesh) return;
+  nodeDataList.forEach((n, i) => {
+    nodeMesh.setColorAt(i, nodeColorFor(n, nodeColorTmp));
+  });
+  if (nodeMesh.instanceColor) nodeMesh.instanceColor.needsUpdate = true;
 }
 
 // ============================================================
@@ -1011,7 +1387,7 @@ function applyFilters() {
     dummy.updateMatrix();
     nodeMesh.setMatrixAt(i, dummy.matrix);
 
-    color.set(n.color);
+    nodeColorFor(n, color);
     nodeMesh.setColorAt(i, color);
 
     nodeDataList.push(n);
@@ -1374,7 +1750,7 @@ function highlightNode(nodeId) {
 
   nodeDataList.forEach((n, i) => {
     if (neighbors.has(n.id)) {
-      color.set(n.color);
+      nodeColorFor(n, color);
     } else {
       color.copy(dimColor);
     }
@@ -1388,7 +1764,7 @@ function resetHighlight() {
   if (!nodeMesh) return;
   const color = new THREE.Color();
   nodeDataList.forEach((n, i) => {
-    color.set(n.color);
+    nodeColorFor(n, color);
     nodeMesh.setColorAt(i, color);
   });
   nodeMesh.instanceColor.needsUpdate = true;
@@ -1432,13 +1808,19 @@ function showInfoPanel(node) {
     mcapEl.textContent = '';
   }
 
-  // 親会社・子会社
+  // 親会社・子会社（graphに存在しない企業への参照は除外）
   const parents = [];
   const children = [];
   for (const e of graph.edges) {
     if (e.type === 'ownership_parent_of') {
-      if (e.dst === node.id) parents.push({ node: nodeById.get(e.src), share: e.share });
-      if (e.src === node.id) children.push({ node: nodeById.get(e.dst), share: e.share });
+      if (e.dst === node.id) {
+        const p = nodeById.get(e.src);
+        if (p) parents.push({ node: p, share: e.share });
+      }
+      if (e.src === node.id) {
+        const c = nodeById.get(e.dst);
+        if (c) children.push({ node: c, share: e.share });
+      }
     }
   }
   parents.sort((a, b) => (b.share || 0) - (a.share || 0));
@@ -1520,6 +1902,11 @@ function updateHover() {
         </div>
         ${node.mcap > 0 ? `<div class="tt-mcap">${t >= 1 ? `¥${t.toFixed(2)}兆` : `¥${Math.round(oku).toLocaleString()}億`}</div>` : ''}
         <div class="tt-deg">接続 ${degreeMap.get(node.id) || 0}件</div>
+        ${activeLossMap ? (() => {
+          const loss = activeLossMap[node.id];
+          if (loss === undefined || loss <= 0.002) return '<div class="tt-loss dim">シナリオ影響: ほぼなし</div>';
+          return `<div class="tt-loss">シナリオ損失: <b>-${(loss * 100).toFixed(1)}%</b></div>`;
+        })() : ''}
       `;
       tooltipEl.classList.add('visible');
       renderer.domElement.style.cursor = 'pointer';
