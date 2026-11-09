@@ -35,6 +35,35 @@ class PublicSnapshotTest(unittest.TestCase):
         self.assertEqual(self.manifest["counts"]["ioTerminalDemandNodes"], 462)
         self.assertEqual(self.manifest["ioModelDefinition"]["includedSparseCoefficientMinimum"], 0.0005)
 
+    def test_2d_mesh_layout_is_a_finite_display_only_projection_for_listed_companies(self) -> None:
+        layout = json.loads((DATA / "ownership-layout.json").read_text(encoding="utf-8"))
+        companies = json.loads((DATA / "companies.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(layout), 3893)
+        self.assertEqual(len(layout), self.manifest["counts"]["ownershipLayoutNodes"])
+        self.assertEqual(len(layout), self.manifest["counts"]["japanListedCompanies"])
+        self.assertEqual({point["id"] for point in layout}, {company["id"] for company in companies})
+        self.assertTrue(all(np.isfinite([point["x"], point["y"]]).all() for point in layout))
+        self.assertTrue(all(set(point) == {"id", "x", "y"} for point in layout))
+        ownership = json.loads((DATA / "ownership.json").read_text(encoding="utf-8"))
+        company_ids = {company["id"] for company in companies}
+        ownership_pairs = {(edge["src_id"], edge["dst_id"]) for edge in ownership}
+        visible_pairs = {(src, dst) for src, dst in ownership_pairs if src in company_ids and dst in company_ids}
+        legacy = json.loads((ROOT / "archive/legacy-3d/data/graph.json").read_text(encoding="utf-8"))
+        legacy_pairs = {(edge["src"], edge["dst"]) for edge in legacy["edges"]}
+        self.assertEqual(ownership_pairs, legacy_pairs)
+        self.assertEqual(len(ownership), 5836)
+        self.assertEqual(len(ownership_pairs), 5573)
+        self.assertEqual(len(visible_pairs), 2002)
+        source = next(row for row in self.manifest["dataCatalog"] if row["id"] == "legacy-mesh-layout")
+        self.assertIn("not geographic", source["role"])
+        self.assertIn("first two principal components", source["role"])
+        self.assertIn("legacy market values", source["role"])
+        self.assertEqual(self.manifest["counts"]["ownershipRelationships"], 5836)
+        self.assertEqual(self.manifest["counts"]["legacyMeshRelationshipRecords"], 5836)
+        self.assertEqual(self.manifest["counts"]["ownershipUniquePairs"], 5573)
+        self.assertEqual(self.manifest["counts"]["ownershipMeshVisiblePairs"], 2002)
+        self.assertEqual(self.manifest["counts"]["ownershipMeshOutOfMeshPairs"], 3571)
+
     def test_sparse_flows_are_unique_finite_and_within_labelled_indices(self) -> None:
         nodes = json.loads((DATA / "industries.json").read_text(encoding="utf-8"))
         flows = np.fromfile(DATA / "icio2020-flows.bin", dtype=np.dtype([

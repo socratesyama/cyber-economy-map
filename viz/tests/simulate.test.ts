@@ -18,7 +18,8 @@ const network: FlowNetwork = {
   nodeIndex: new Map(nodes.map((node, index) => [node.id, index])),
 };
 const scenario: ScenarioInput = {
-  eventId: 'proxy', title: 'Explicitly entered supplier-sector interruption',
+  selectedEvent: { id: 'proxy', label: 'Explicitly entered supplier-sector interruption', support: 'proxy-only' },
+  modeledProxy: { id: 'user-specified-country-industry-outage', label: 'AAA / C26 production outage proxy' },
   channel: 'production-outage', seedNodes: ['AAA_C26'],
   shock: { min: 0.4, max: 0.6 },
   substitution: { min: 0.2, max: 0.4 },
@@ -31,6 +32,13 @@ describe('reproducible, source-constrained scenario propagation', () => {
     const a = simulateScenario(scenario, network);
     const b = simulateScenario(scenario, network);
     expect(a).toEqual(b);
+  });
+
+  it('does not report a zero-percent seed as an impact or phantom downstream step', () => {
+    const result = simulateScenario({ ...scenario, shock: { min: 0, max: 0 } }, network);
+    expect(result.industries).toEqual([]);
+    expect(result.countries).toEqual([]);
+    expect(result.summary.affectedIndustryCount).toBe(0);
   });
 
   it('does not invent exposure where no source node or edge is present', () => {

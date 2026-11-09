@@ -9,11 +9,13 @@ import { CompanyDirectory } from './CompanyDirectory';
 import { loadSnapshot, readFlowSnapshot, type Snapshot } from './data';
 import { DEFAULT_EVENT_ID, EVENTS } from './events';
 import type { FirmRecord, IndustryImpact, ScenarioBundle, ScenarioInput, ScenarioResult } from './engine/types';
+import { NetworkMesh } from './NetworkMesh';
 import { WorldMap } from './WorldMap';
 import { RippleGlyph } from './RippleGlyph';
 
 const MODEL_VERSION = '0.1.0';
 const ENERGY_SECTORS = new Set(['B05_06']);
+const NO_IMPACTS: IndustryImpact[] = [];
 const NAV = [
   { id: 'atlas', label: 'シナリオ分析', icon: Globe2 },
   { id: 'companies', label: '企業名鑑', icon: Building2 },
@@ -21,7 +23,7 @@ const NAV = [
   { id: 'events', label: '事象カタログ', icon: Layers3 },
 ] as const;
 type Page = (typeof NAV)[number]['id'];
-interface SavedRun { key: string; title: string; when: string; input: ScenarioInput; top: Array<Pick<IndustryImpact, 'nodeId' | 'country' | 'industryJa' | 'p50'>>; }
+interface SavedRun { key: string; title: string; eventLabel?: string; proxyLabel?: string; when: string; input: ScenarioInput; top: Array<Pick<IndustryImpact, 'nodeId' | 'country' | 'industryJa' | 'p50'>>; }
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 function saveBlob(filename: string, content: string, mime: string) {
@@ -85,7 +87,11 @@ function buildScenario({
   if (!inputCost && !snapshot.industries.some((node) => node.id === seed[0])) return null;
 
   return {
-    eventId, title: event.label, channel: inputCost ? 'input-cost' : 'production-outage', seedNodes: seed,
+    selectedEvent: { id: event.id, label: event.label, support: event.support },
+    modeledProxy: inputCost
+      ? { id: 'icio-energy-input-cost-pressure', label: 'ICIO 2020 · B05_06（石炭・原油・天然ガス）投入費用圧力proxy' }
+      : { id: 'user-specified-country-industry-outage', label: `利用者指定 · ${country} / ${industry} 生産中断proxy` },
+    channel: inputCost ? 'input-cost' : 'production-outage', seedNodes: seed,
     shock: { min: shockLowValue / (inputCost ? 1 : 100), max: shockHighValue / (inputCost ? 1 : 100) },
     substitution: inputCost ? { min: 0, max: 0 } : { min: subLowValue, max: subHighValue },
     inventory: inputCost ? { min: 0, max: 0 } : { min: bufferLowValue, max: bufferHighValue },
@@ -230,6 +236,7 @@ function ScenarioAnalysis({
   const [passLow, setPassLow] = useState('0');
   const [passHigh, setPassHigh] = useState('100');
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [visualMode, setVisualMode] = useState<'mesh' | 'map'>('mesh');
   const [bundleNotice, setBundleNotice] = useState('');
   const [savedRuns, setSavedRuns] = useState<SavedRun[]>(() => {
     try { return JSON.parse(localStorage.getItem('ripple:runs') ?? '[]') as SavedRun[]; } catch { return []; }
@@ -261,8 +268,8 @@ function ScenarioAnalysis({
   const handleRun = () => { if (scenario) onRun(scenario); };
   const addSavedRun = () => {
     if (!result) return;
-    const key = `${result.input.eventId}:${result.input.seed}:${result.input.seedNodes.join(',')}:${Date.now()}`;
-      const run: SavedRun = { key, title: result.input.title, when: new Date().toISOString(), input: result.input, top: result.industries.filter((item) => item.step > 0).slice(0, 7).map(({ nodeId, country: code, industryJa, p50 }) => ({ nodeId, country: code, industryJa, p50 })) };
+    const key = `${result.input.selectedEvent.id}:${result.input.modeledProxy.id}:${result.input.seed}:${Date.now()}`;
+      const run: SavedRun = { key, title: `${result.input.selectedEvent.label} / ${result.input.modeledProxy.label}`, eventLabel: result.input.selectedEvent.label, proxyLabel: result.input.modeledProxy.label, when: new Date().toISOString(), input: result.input, top: result.industries.filter((item) => item.step > 0).slice(0, 7).map(({ nodeId, country: code, industryJa, p50 }) => ({ nodeId, country: code, industryJa, p50 })) };
     const next = [run, ...savedRuns].slice(0, 6);
     setSavedRuns(next);
     localStorage.setItem('ripple:runs', JSON.stringify(next));
@@ -270,29 +277,34 @@ function ScenarioAnalysis({
   };
   const downloadBundle = () => {
     if (!result) return;
+    const { selectedEvent, modeledProxy, ...assumptions } = result.input;
     const bundle: ScenarioBundle = {
-      schemaVersion: 'ripple-scenario/1.2', codeRevision: __RIPPLE_SOURCE_REVISION__, modelVersion: MODEL_VERSION,
+      schemaVersion: 'ripple-scenario/1.3', codeRevision: __RIPPLE_SOURCE_REVISION__, modelVersion: MODEL_VERSION,
       datasetSnapshot: snapshot.manifest.datasetSnapshot,
       datasetGeneratedAt: snapshot.manifest.generatedAt,
       datasetChecksumsSha256: snapshot.manifest.checksumsSha256,
       createdAt: new Date().toISOString(),
-      sourceStatus: 'observed-data-plus-explicit-assumptions', scenario: result.input, results: result,
+      sourceStatus: 'observed-data-plus-explicit-assumptions',
+      scenario: { selectedEvent, modeledProxy, assumptions }, results: result,
       interpretation: [
+        'selectedEventは利用者が選んだ想定事象。modeledProxyはこのBundleで実際に計算した入力であり、事象名と同じ機構を意味するものではありません。',
         '入力ショックと独立した事象発生確率ではありません。',
         'P10/P50/P90は入力範囲を一様に掃引した感度分位です。校正済予測区間ではありません。',
         '対象の主張はICIO 2020の国×産業投入係数に基づく条件付きストレス指標です。',
         '日本企業に関しては個社別仕入フロー・生産位置を観測していません。会社行は産業代理であり会社固有の損失値ではありません。',
       ],
     };
-    saveBlob(`ripple-scenario-${result.input.eventId}-${result.input.seed}.json`, JSON.stringify(bundle, null, 2), 'application/json');
+    saveBlob(`ripple-scenario-${result.input.selectedEvent.id}-${result.input.modeledProxy.id}-${result.input.seed}.json`, JSON.stringify(bundle, null, 2), 'application/json');
     setBundleNotice('コードrevision・前提・データ版・結果を含むScenario Bundleを保存しました');
   };
   const downloadCsv = () => {
     if (!result) return;
-    const columns = ['node_id', 'country', 'industry', 'industry_label_ja', 'first_step', 'sensitivity_p10', 'sensitivity_p50', 'sensitivity_p90'];
-    const rows = result.industries.map((item) => [item.nodeId, item.country, item.industry, item.industryJa, item.step, item.p10, item.p50, item.p90]);
-    const csv = [columns, ...rows].map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\r\n');
-    saveBlob(`ripple-industries-${result.input.eventId}.csv`, '\uFEFF' + csv, 'text/csv;charset=utf-8');
+    const columns = ['record_type', 'selected_event_id', 'selected_event_label', 'selected_event_support', 'modeled_proxy_id', 'modeled_proxy_label', 'node_id', 'country', 'industry', 'industry_label_ja', 'first_step', 'sensitivity_p10', 'sensitivity_p50', 'sensitivity_p90'];
+    const provenance = [result.input.selectedEvent.id, result.input.selectedEvent.label, result.input.selectedEvent.support, result.input.modeledProxy.id, result.input.modeledProxy.label];
+    const scenarioRow = ['scenario', ...provenance, ...Array(columns.length - 6).fill('')];
+    const rows = result.industries.map((item) => ['impact', ...provenance, item.nodeId, item.country, item.industry, item.industryJa, item.step, item.p10, item.p50, item.p90]);
+    const csv = [columns, scenarioRow, ...rows].map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\r\n');
+    saveBlob(`ripple-industries-${result.input.selectedEvent.id}-${result.input.modeledProxy.id}.csv`, '\uFEFF' + csv, 'text/csv;charset=utf-8');
   };
   return (
     <main className="workbench" id="main-content">
@@ -348,13 +360,25 @@ function ScenarioAnalysis({
         </aside>
 
         <div className="map-column">
-          <section className="map-panel panel" aria-label="世界地図の国×産業露出">
-            <div className="panel-titlebar"><div><Slot>ATLAS / COVERED SECTORS ONLY</Slot><h2>世界の伝播面</h2></div><div className="map-control-hint"><span className="hollow-dot" /> 港の位置（6件）<i /> 経路の線は未収録</div></div>
+          <section className="map-panel panel" aria-labelledby="visual-panel-title">
+            <div className="panel-titlebar"><div><Slot>{visualMode === 'mesh' ? '2D OWNERSHIP MESH / ORIGINAL ENTITIES' : 'WORLD ATLAS / IO INDUSTRY PROXY'}</Slot><h2 id="visual-panel-title">{visualMode === 'mesh' ? '企業のつながりを、平面で探る' : '国×産業の波及を地図で読む'}</h2></div><div className="map-control-hint">{visualMode === 'mesh' ? '資本関係 · ショック伝播とは別' : <><span className="hollow-dot" /> 港の位置（6件）<i /> 経路の線は未収録</>}</div></div>
+            <div className="visual-mode-tabs" role="tablist" aria-label="中央のビジュアライゼーション">
+              <button type="button" role="tab" id="mesh-tab" aria-controls="visual-panel" aria-selected={visualMode === 'mesh'} onClick={() => setVisualMode('mesh')}><span>企業メッシュ</span><small>3D配置を2D投影</small></button>
+              <button type="button" role="tab" id="geography-tab" aria-controls="visual-panel" aria-selected={visualMode === 'map'} onClick={() => setVisualMode('map')}><span>世界地図</span><small>国×産業 IO 指標</small></button>
+            </div>
             {result ? (
-              <div className="map-current"><span className="map-current__event">{result.input.title}</span><span>{result.summary.channel === 'input-cost' ? '影響セクター単純平均 · 費用圧力proxy P50' : '影響セクター単純平均 · 生産中断proxy P50'}</span></div>
-            ) : <div className="map-current map-current--empty"><span>シミュレーション結果は未実行</span><span>シナリオ条件を計算すると色づきます</span></div>}
-            <WorldMap world={snapshot.world} impacts={mapImpacts} ports={snapshot.ports} selectedCountry={selectedCountry} onSelectCountry={setSelectedCountry} />
-            <div className="map-foot"><span>Natural Earth 1:110m · de facto 国境</span><span>灰色＝ゼロではなく、非収録／この実行では未波及</span></div>
+              <div className="map-current">
+                <div className="map-current__identity"><span>想定事象</span><b>{result.input.selectedEvent.label}</b></div>
+                <div className="map-current__identity"><span>計算したproxy入力</span><b>{result.input.modeledProxy.label}</b></div>
+                <span className="map-current__note">{result.input.selectedEvent.support === 'unavailable' ? '選択事象固有の経路は算定していません。上記proxyのみを計算しました。' : result.input.selectedEvent.support === 'proxy-only' ? '事象そのものの機構ではなく、上記proxy入力の伝播結果です。' : '観測・接続された範囲に限る条件付き指標です。'} {visualMode === 'mesh' ? '色は対応する業種の代理指標。資本関係でショックを伝播しません。' : result.summary.channel === 'input-cost' ? '国別カバー産業単純平均 · 費用圧力proxy P50' : '国別カバー産業単純平均 · 生産中断proxy P50'}</span>
+              </div>
+            ) : <div className="map-current map-current--empty"><span>シミュレーション結果は未実行</span><span>{visualMode === 'mesh' ? '既存の企業・資本関係のみ表示しています。' : '条件付きIOの結果はここに表示します。'}</span></div>}
+            <div id="visual-panel" role="tabpanel" aria-labelledby={visualMode === 'mesh' ? 'mesh-tab' : 'geography-tab'} tabIndex={0}>
+              {visualMode === 'mesh' ? <NetworkMesh companies={snapshot.companies} layout={snapshot.ownershipLayout} ownership={snapshot.ownership} impacts={result?.industries ?? NO_IMPACTS} /> : <>
+                <WorldMap world={snapshot.world} impacts={mapImpacts} ports={snapshot.ports} selectedCountry={selectedCountry} onSelectCountry={setSelectedCountry} />
+                <div className="map-foot"><span>Natural Earth 1:110m · de facto 国境</span><span>灰色＝ゼロではなく、非収録／この実行では未波及</span></div>
+              </>}
+            </div>
           </section>
           <div className="trace-panel panel">
             <div className="trace-panel__title"><div><Slot>TRANSMISSION ORDER</Slot><h3>ショックから、産業へ</h3></div><GitBranch size={16} /></div>
@@ -399,6 +423,8 @@ function ScenarioAnalysis({
           <div className="section-head section-head--line"><div><Slot>REPRODUCE / EXPORT / COMPARE</Slot><h2>この条件を持ち帰る</h2></div><FileJson2 size={19} /></div>
           <div className="run-metadata">
             <FindingLine label="モデル" value={`RIPPLE ${MODEL_VERSION} / ${result.summary.maxPropagationSteps}層`} />
+            <FindingLine label="想定事象" value={result.input.selectedEvent.label} />
+            <FindingLine label="計算したproxy" value={result.input.modeledProxy.label} />
             <FindingLine label="データ" value="OECD ICIO 2020 · ICIO係数固定" />
             <FindingLine label="コードrevision" value={__RIPPLE_SOURCE_REVISION__.slice(0, 12)} />
             <FindingLine label="再現seed" value={String(result.input.seed)} />
@@ -407,7 +433,7 @@ function ScenarioAnalysis({
           </div>
           <div className="export-actions"><button type="button" onClick={downloadBundle} className="button-primary"><Download size={15} /> Scenario Bundle · JSON</button><button type="button" onClick={downloadCsv} className="button-quiet"><Table2 size={15} /> 国産業 CSV</button><button type="button" onClick={addSavedRun} className="button-quiet"><Clipboard size={15} /> 比較へ保存</button></div>
           {bundleNotice && <span className="inline-confirm"><Check size={13} />{bundleNotice}</span>}
-          {savedRuns.length > 0 && <div className="saved-compare"><div className="saved-compare__head"><span>保存した条件比較</span><span>端末内のみ · {savedRuns.length}/6</span></div>{savedRuns.slice(0, 3).map((run) => <div className="saved-run" key={run.key}><span className="saved-run__dot" /> <b>{run.title}</b><small>{new Date(run.when).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small><span>{run.top[0] ? `${run.top[0].country} / ${run.top[0].industryJa}` : '影響ノードなし'}</span></div>)}{savedRuns.length > 1 && <details className="compare-table"><summary>上位ノードを並べて比較</summary>{savedRuns.slice(0, 2).map((run) => <div key={`cmp-${run.key}`}><b>{run.title}</b>{run.top.slice(0, 5).map((item) => <FindingLine key={`${run.key}-${item.nodeId}`} label={`${item.country} / ${item.industryJa}`} value={percent(item.p50)} />)}</div>)}</details>}</div>}
+          {savedRuns.length > 0 && <div className="saved-compare"><div className="saved-compare__head"><span>保存した条件比較</span><span>端末内のみ · {savedRuns.length}/6</span></div>{savedRuns.slice(0, 3).map((run) => <div className="saved-run" key={run.key}><span className="saved-run__dot" /><div className="saved-run__identity"><b>想定事象: {run.eventLabel ?? run.title}</b><small>計算proxy: {run.proxyLabel ?? '旧保存形式のため未記録'}</small></div><small>{new Date(run.when).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small><span>{run.top[0] ? `${run.top[0].country} / ${run.top[0].industryJa}` : '影響ノードなし'}</span></div>)}{savedRuns.length > 1 && <details className="compare-table"><summary>上位ノードを並べて比較</summary>{savedRuns.slice(0, 2).map((run) => <div key={`cmp-${run.key}`}><b>想定事象: {run.eventLabel ?? run.title}</b><small>計算proxy: {run.proxyLabel ?? '旧保存形式のため未記録'}</small>{run.top.slice(0, 5).map((item) => <FindingLine key={`${run.key}-${item.nodeId}`} label={`${item.country} / ${item.industryJa}`} value={percent(item.p50)} />)}</div>)}</details>}</div>}
           <p className="micro-note">ブラウザー上で保存・比較できます。Scenario Bundleにはデータ版・生成時刻・実ファイルのSHA-256を記録し、データページで出典を確認できます。APIキーや個別アカウント情報は含めません。</p>
         </section>
       </div>}

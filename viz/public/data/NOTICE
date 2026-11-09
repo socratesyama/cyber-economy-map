@@ -1,6 +1,8 @@
 RIPPLE code is licensed under Apache License 2.0 (see the repository LICENSE).
 
-That license does not relicense files generated under public/data. Exported company-master, filed relationship, OECD ICIO and port records remain subject to their own source terms. See ../../../docs/data-sources.md for source-specific attribution, data vintage, use restrictions and exclusions.
+That license does not relicense files generated under public/data. Company, ownership and industry data remain subject to their own source terms. See ../../../docs/data-sources.md for source-specific attribution, data vintage, use restrictions and exclusions.
+
+`ownership-layout.json` contains entity IDs and normalized two-dimensional display coordinates derived from the archived three-dimensional mesh. These coordinates are neither geographic positions nor economic magnitudes. The projection does not re-export legacy market values, node sizes, colors or edge payloads. The original source and dataset terms still apply; no additional data license is implied. Ownership relationships describe capital links, not supplier dependencies.
 
 Country boundary geometry is from Natural Earth, public domain. Credit: Made with Natural Earth (https://www.naturalearthdata.com/).
 

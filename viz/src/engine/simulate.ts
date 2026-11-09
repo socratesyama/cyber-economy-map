@@ -136,13 +136,13 @@ export function simulateScenario(
     if (node.isRow || node.country === 'ROW' || node.isFinalDemand) continue;
     const values = sampleValues[i];
     const p50 = quantile(values, 0.5);
-    if (p50 <= 1e-5 && !seedIndexes.includes(i)) continue;
+    const p10 = quantile(values, 0.1);
+    const p90 = quantile(values, 0.9);
+    if (p90 <= 1e-5) continue;
     const step = firstSteps[i] === 0 ? scenario.maxSteps + 1 : Math.max(0, firstSteps[i] - 1);
     impacts.push({
       nodeId: node.id, country: node.country, industry: node.industry,
-      industryJa: node.industryJa, step,
-      p10: quantile(values, 0.1), p50,
-      p90: quantile(values, 0.9),
+      industryJa: node.industryJa, step, p10, p50, p90,
     });
     // The seed describes the imposed condition, not a ripple onto that country's other buyers.
     // Keep it in the full replay bundle, but do not let it dominate the downstream map.

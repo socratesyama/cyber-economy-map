@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DB = ROOT / "db/cybermap.sqlite"
 ICIO = ROOT / "data/icio2020_coeff.npz"
 MAP_ZIP = ROOT / "raw/assets/ne_110m_admin_0_countries.zip"
+LEGACY_GRAPH = ROOT / "archive/legacy-3d/data/graph.json"
 OUT = ROOT / "viz/public/data"
 
 SECTOR_TO_ICIO = {
@@ -94,6 +95,72 @@ def export_world() -> tuple[int, str]:
     return len(features), dump_json(OUT / "world.geojson", payload)
 
 
+def export_ownership_layout(company_ids: set[str], ownership_records: list[dict[str, object]]) -> tuple[int, str, dict[str, int]]:
+    """Project only the archived 3D display coordinates to a stable 2D PCA layout.
+
+    Company identity and ownership evidence are exported independently above. The
+    legacy display's market values, size, colors and edge payload are not used here.
+    The resulting coordinates have no geographic or economic interpretation.
+    """
+    if not LEGACY_GRAPH.is_file():
+        raise FileNotFoundError(f"Archived mesh layout not found: {LEGACY_GRAPH}")
+    graph = json.loads(LEGACY_GRAPH.read_text(encoding="utf-8"))
+    source_nodes = graph.get("nodes", [])
+    source_edges = graph.get("edges", [])
+    by_id: dict[str, dict[str, object]] = {}
+    for node in source_nodes:
+        node_id = str(node.get("id", ""))
+        if not node_id or node_id in by_id:
+            raise ValueError("Archived mesh has an empty or duplicate company id")
+        by_id[node_id] = node
+    if set(by_id) != company_ids:
+        missing = company_ids - set(by_id)
+        extra = set(by_id) - company_ids
+        raise ValueError(f"Archived mesh/company IDs differ (missing={len(missing)}, extra={len(extra)})")
+
+    archived_pairs = {(str(edge["src"]), str(edge["dst"])) for edge in source_edges}
+    ownership_pairs = {(str(edge["src_id"]), str(edge["dst_id"])) for edge in ownership_records}
+    if archived_pairs != ownership_pairs:
+        raise ValueError("Archived mesh ownership pairs no longer match the current ownership snapshot")
+    visible_pairs = {pair for pair in ownership_pairs if pair[0] in company_ids and pair[1] in company_ids}
+    visible_records = sum(1 for edge in ownership_records if (str(edge["src_id"]), str(edge["dst_id"])) in visible_pairs)
+    relationship_counts = {
+        "legacyMeshRelationshipRecords": len(source_edges),
+        "ownershipUniquePairs": len(ownership_pairs),
+        "ownershipMeshVisiblePairs": len(visible_pairs),
+        "ownershipMeshOutOfMeshPairs": len(ownership_pairs - visible_pairs),
+        "ownershipMeshVisibleEvidenceRecords": visible_records,
+    }
+
+    ordered_ids = sorted(company_ids)
+    coordinates = np.asarray(
+        [[float(by_id[company_id][axis]) for axis in ("x", "y", "z")] for company_id in ordered_ids],
+        dtype=np.float64,
+    )
+    if coordinates.ndim != 2 or coordinates.shape != (len(ordered_ids), 3):
+        raise ValueError("Archived mesh must provide three display coordinates for every company")
+    if not np.isfinite(coordinates).all():
+        raise ValueError("Archived mesh display coordinates must be finite")
+
+    centered = coordinates - coordinates.mean(axis=0)
+    _, singular_values, components = np.linalg.svd(centered, full_matrices=False)
+    if len(singular_values) < 2 or singular_values[1] <= 1e-12:
+        raise ValueError("Archived mesh does not span a 2D projection")
+    projected = centered @ components[:2].T
+    # PCA signs are arbitrary. Fix each component's dominant source axis so the
+    # same inputs produce the same left/right and top/bottom orientation.
+    for component_index in range(2):
+        dominant_axis = int(np.argmax(np.abs(components[component_index])))
+        if components[component_index, dominant_axis] < 0:
+            projected[:, component_index] *= -1
+
+    layout = [
+        {"id": company_id, "x": round(float(point[0]), 8), "y": round(float(point[1]), 8)}
+        for company_id, point in zip(ordered_ids, projected, strict=True)
+    ]
+    return len(layout), dump_json(OUT / "ownership-layout.json", layout), relationship_counts
+
+
 def main() -> None:
     if not DB.is_file() or not ICIO.is_file():
         raise FileNotFoundError("Expected db/cybermap.sqlite and data/icio2020_coeff.npz")
@@ -121,12 +188,14 @@ def main() -> None:
             "tier1FinancialRecordCount": fcounts.get(r["company_id"], 0),
         })
     hashes["companies.json"] = dump_json(OUT / "companies.json", companies)
-
     rels = [dict(r) for r in conn.execute("""SELECT edge_id,src_id,dst_id,relation_type,share_pct,
                 dependency_status,as_of,source_tier,source_ref,extraction,confidence
                 FROM relation WHERE src_id IN (SELECT company_id FROM company WHERE layer IN ('F_jp','F_border'))
                 AND dst_id IN (SELECT company_id FROM company WHERE layer IN ('F_jp','F_border'))
                 ORDER BY edge_id""")]
+    layout_count, hashes["ownership-layout.json"], ownership_mesh_counts = export_ownership_layout(
+        {company["id"] for company in companies}, rels
+    )
     # Ownership is observable; it is never re-labeled as a sales or procurement edge.
     hashes["ownership.json"] = dump_json(OUT / "ownership.json", rels)
 
@@ -179,7 +248,7 @@ def main() -> None:
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     world_count, hashes["world.geojson"] = export_world()
     manifest = {
-        "schemaVersion": "1.0.0", "generatedAt": now,
+        "schemaVersion": "1.1.0", "generatedAt": now,
         "datasetSnapshot": "cyber-economy-map@81379cdd8996dfe3c567a80f0737a3cc160a981b",
         "boundaryVintage": "Natural Earth 1:110m Admin 0; de facto representation",
         "ioModelDefinition": {
@@ -191,6 +260,8 @@ def main() -> None:
         },
         "counts": {
             "japanListedCompanies": len(companies), "ownershipRelationships": len(rels),
+            "ownershipLayoutNodes": layout_count,
+            **ownership_mesh_counts,
             "relationshipsByStatus": relation_by_status, "ioNodes": len(production_names),
             "geographicProductionNodes": sum(key.partition("_")[0] != "ROW" for key in production_names),
             "ioTerminalDemandNodes": len(node_names) - len(production_names),
@@ -204,6 +275,7 @@ def main() -> None:
             {"id": "jpx-listed", "label": "Japan-listed company master", "period": "Repository snapshot; source as recorded in DB", "source": "https://www.jpx.co.jp/english/term-of-use/index.html", "license": "JPX terms prohibit commercial collection or secondary use without permission; these rows are not Apache-2.0 data", "role": "Company identity, ticker and broad sector only; no modeled trade or loss"},
             {"id": "edinet", "label": "EDINET corporate filings", "period": "Per record; see source DB", "source": "https://disclosure2.edinet-fsa.go.jp/", "license": "EDINET Terms of Use / Digital Agency PDL 1.0: attribute, identify edits and author; API access required", "role": "Some reported relationship records and finance-record coverage counts; filing values are not propagated"},
             {"id": "wikidata", "label": "Wikidata", "period": "As recorded in source DB", "source": "https://www.wikidata.org/", "license": "CC0 for structured data", "role": "Some ownership relationships; relation status and confidence retained"},
+            {"id": "legacy-mesh-layout", "label": "Archived corporate-mesh display coordinates", "period": "Display layout only; no time-series vintage", "source": "archive/legacy-3d/data/graph.json", "license": "Derived layout only; original source and dataset terms still apply, with no additional data license implied", "role": "Reads only entity ID and x/y/z display coordinates, then projects them to the first two principal components. The archived 5,836 relation records contain 5,573 distinct pairs; only 2,002 pairs have both listed-company endpoints in the 3,893-node layout. The other 3,571 pairs are off-mesh and are not assigned invented coordinates. Does not export legacy market values, node sizes, edge payload or colors; not geographic or economic coordinates."},
             {"id": "icio", "label": "OECD ICIO 2020 table", "period": "2020; edition/vintage described in the source database", "source": "https://www.oecd.org/en/data/datasets/inter-country-input-output-tables.html", "license": "OECD Terms & Conditions permit data use subject to any dataset-specific or third-party restrictions; cite the exact dataset", "role": "International country-by-industry input share proxy; not firm procurement"},
             {"id": "comtrade", "label": "UN Comtrade bilateral flows", "period": "2023, selected Japanese trade flows", "source": "https://uncomtrade.org/docs/re-dissemination-of-data/", "license": "Original row data intentionally not shipped in the public app bundle; data policy applies", "role": "758 repository rows reviewed for coverage only; not used as a firm or route edge"},
             {"id": "pink-sheet", "label": "World Bank commodity-price series", "period": "2016-2024 in the source DB", "source": "https://www.worldbank.org/en/research/commodity-markets", "license": "Not exported to the app bundle; verify World Bank dataset terms before use", "role": "Historical series is not connected to this engine"},
@@ -215,7 +287,9 @@ def main() -> None:
                        "Ownership links are never treated as procurement, revenue-share or credit links.",
                        "Unknown company dependencies remain unknown.",
                        "758 selected UN Comtrade rows, 1,835 World Bank commodity price observations, and six aggregate route records are withheld from the static app bundle pending source-specific review.",
-                       "The DB currently has no company-to-port link, facility layer, country-risk series or macro FX/rate series."],
+                       "The DB currently has no company-to-port link, facility layer, country-risk series or macro FX/rate series.",
+                       "The company-mesh edges are ownership relations only and are never used to transmit scenario shocks; only pairs with both endpoints in the listed-company display population are drawn, while off-mesh endpoints remain undisplayed.",
+                       "Within the company-mesh dataset, repeated source records for the same directed company pair remain separate in the evidence table but are drawn as one unique relation."],
     }
     hashes["manifest.json"] = dump_json(OUT / "manifest.json", manifest)
     conn.close()

@@ -1,5 +1,5 @@
 import type { FeatureCollection, Geometry } from 'geojson';
-import type { DataManifest, FirmRecord, IndustryNode, OwnershipRecord } from './engine/types';
+import type { DataManifest, FirmRecord, IndustryNode, OwnershipLayoutPoint, OwnershipRecord } from './engine/types';
 
 export interface PortRecord {
   port_id: string;
@@ -22,6 +22,7 @@ export interface Snapshot {
   manifest: DataManifest;
   industries: IndustryNode[];
   companies: FirmRecord[];
+  ownershipLayout: OwnershipLayoutPoint[];
   ownership: OwnershipRecord[];
   ports: PortRecord[];
   world: FeatureCollection<Geometry, CountryProperties>;
@@ -36,15 +37,16 @@ async function readJson<T>(file: string): Promise<T> {
 }
 
 export async function loadSnapshot(): Promise<Snapshot> {
-  const [manifest, industries, companies, ownership, ports, world] = await Promise.all([
+  const [manifest, industries, companies, ownershipLayout, ownership, ports, world] = await Promise.all([
     readJson<DataManifest>('manifest.json'),
     readJson<IndustryNode[]>('industries.json'),
     readJson<FirmRecord[]>('companies.json'),
+    readJson<OwnershipLayoutPoint[]>('ownership-layout.json'),
     readJson<OwnershipRecord[]>('ownership.json'),
     readJson<PortRecord[]>('ports.json'),
     readJson<FeatureCollection<Geometry, CountryProperties>>('world.geojson'),
   ]);
-  return { manifest, industries, companies, ownership, ports, world };
+  return { manifest, industries, companies, ownershipLayout, ownership, ports, world };
 }
 
 export async function readFlowSnapshot(): Promise<ArrayBuffer> {

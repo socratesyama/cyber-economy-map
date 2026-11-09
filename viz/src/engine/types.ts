@@ -26,9 +26,20 @@ export interface RangeInput {
   max: number;
 }
 
+export interface ScenarioEventContext {
+  id: string;
+  label: string;
+  support: 'conditional' | 'proxy-only' | 'unavailable';
+}
+
+export interface ModeledProxy {
+  id: 'icio-energy-input-cost-pressure' | 'user-specified-country-industry-outage';
+  label: string;
+}
+
 export interface ScenarioInput {
-  eventId: string;
-  title: string;
+  selectedEvent: ScenarioEventContext;
+  modeledProxy: ModeledProxy;
   channel: ShockChannel;
   seedNodes: string[];
   shock: RangeInput;
@@ -85,6 +96,13 @@ export interface FirmRecord {
   tier1FinancialRecordCount: number;
 }
 
+/** Deterministic 2D projection of legacy display geometry; never a geo/economic value. */
+export interface OwnershipLayoutPoint {
+  id: string;
+  x: number;
+  y: number;
+}
+
 export interface OwnershipRecord {
   edge_id: string;
   src_id: string;
@@ -125,7 +143,7 @@ export interface DataManifest {
 }
 
 export interface ScenarioBundle {
-  schemaVersion: 'ripple-scenario/1.2';
+  schemaVersion: 'ripple-scenario/1.3';
   codeRevision: string;
   modelVersion: string;
   datasetSnapshot: string;
@@ -133,7 +151,11 @@ export interface ScenarioBundle {
   datasetChecksumsSha256: Record<string, string>;
   createdAt: string;
   sourceStatus: 'observed-data-plus-explicit-assumptions';
-  scenario: ScenarioInput;
+  scenario: {
+    selectedEvent: ScenarioEventContext;
+    modeledProxy: ModeledProxy;
+    assumptions: Omit<ScenarioInput, 'selectedEvent' | 'modeledProxy'>;
+  };
   results: ScenarioResult;
   interpretation: string[];
 }
