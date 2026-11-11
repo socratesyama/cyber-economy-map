@@ -149,6 +149,7 @@ def main():
         elif scenario == "entity_failure":
             # ticker -> company_id
             ticker = params.pop("ticker")
+            watch_tickers = params.pop("watch_tickers", [])
             r = eng.con.execute(
                 "SELECT company_id FROM id_map WHERE id_type='ticker' AND id_value=?", (ticker,)).fetchone()
             if not r:
@@ -166,16 +167,40 @@ def main():
                 "suppliers_mean_loss_pct": round(float(mean[np.arange(len(mean)) != i].mean()) * 100, 4),
                 "firms_affected_gt1pct": int((mean > 0.01).sum()),
             }
+            # 特定企業の損失率を記録（伝播先の検証用）
+            for wt in watch_tickers:
+                w = eng.con.execute(
+                    "SELECT company_id FROM id_map WHERE id_type='ticker' AND id_value=?", (wt,)).fetchone()
+                if w and w["company_id"] in eng.firm_idx:
+                    j = eng.firm_idx[w["company_id"]]
+                    out["firm"].setdefault("watch_losses_pct", {})[wt] = round(float(mean[j]) * 100, 3)
             print(f"\n[{eid}] ({ev.get('split')}) entity_failure {ticker} severity={params.get('severity')}")
             print(f"  seed損失: {out['firm']['seed_mean_loss_pct']}%  他社平均: {out['firm']['suppliers_mean_loss_pct']}%  影響>1%: {out['firm']['firms_affected_gt1pct']}社")
+            for wt, v in out["firm"].get("watch_losses_pct", {}).items():
+                print(f"  watch {wt}: {v}%")
 
         # 比較（comparisonsで定義されたもののみ）
         comps = []
         for c in ev.get("comparisons", []):
-            if not c.get("comparable"):
-                comps.append({"key": c.get("key"), "comparable": False, "note": c.get("note", "")})
-                continue
-            comps.append({"key": c.get("key"), "comparable": True, "note": c.get("note", "")})
+            entry = {"key": c.get("key"), "comparable": bool(c.get("comparable")), "note": c.get("note", "")}
+            # 自動比較: actual_value_pct + predict_from が定義された比較は予測/実測比を機械計算する
+            if c.get("actual_value_pct") is not None and c.get("predict_from"):
+                try:
+                    pred = out
+                    for p in c["predict_from"].split("."):
+                        pred = pred[p] if isinstance(pred, dict) else None
+                    if pred is not None:
+                        pred = float(pred)
+                        actual = float(c["actual_value_pct"])
+                        entry.update({
+                            "predicted_pct": round(pred, 3),
+                            "actual_pct": actual,
+                            "ratio": round(pred / actual, 3) if actual else None,
+                            "log_error": round(abs(np.log(max(pred, 1e-9) / max(actual, 1e-9))), 3),
+                        })
+                except (KeyError, TypeError, ValueError):
+                    entry["auto_compare_error"] = True
+            comps.append(entry)
         out["comparisons"] = comps
         results["events"][eid] = out
 

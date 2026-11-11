@@ -252,6 +252,113 @@
           "source_url": "https://www.theregister.com/security/2025/11/05/ms-pegs-cyber-cleanup-costs-at-136m-profits-tumble/325250"
         }
       ]
+    },
+    "fy2021_fuel_surge": {
+      "split": "external",
+      "params": {
+        "commodity": "lng_japan",
+        "multiplier": 1.607
+      },
+      "layerA": {
+        "jpn_mean_loss_pct": 0.429,
+        "jpn_c29_loss_pct": 0.172,
+        "jpn_d_loss_pct": 2.244,
+        "jpn_c26_loss_pct": 0.167
+      },
+      "comparisons": [
+        {
+          "key": "tepco_margin_loss",
+          "comparable": true,
+          "note": "FY2021は小売電力量減少（売上高▲9.5%）もあり燃料費以外の要因を含む。減益の主因はJERAの燃料費調整制度の期ずれ影響（規制のため価格転嫁が遅延）で、pass_through=0.05の較正値と整合する方向。パラメータ調整は行っていない。",
+          "predicted_pct": 2.244,
+          "actual_pct": 2.73,
+          "ratio": 0.822,
+          "log_error": 0.196
+        }
+      ]
+    },
+    "westrain_2018_mazda": {
+      "split": "external",
+      "params": {
+        "severity": 0.042
+      },
+      "firm": {
+        "seed_ticker": "7261",
+        "seed_mean_loss_pct": 4.306,
+        "suppliers_mean_loss_pct": 0.0,
+        "firms_affected_gt1pct": 1
+      },
+      "comparisons": [
+        {
+          "key": "mazda_production_loss",
+          "comparable": true,
+          "note": "severity（減産率）の直接対応を検証。熊本地震・サイバー攻撃と同じ形式の独立事例。",
+          "predicted_pct": 4.306,
+          "actual_pct": 4.2,
+          "ratio": 1.025,
+          "log_error": 0.025
+        },
+        {
+          "key": "mazda_profit_impact",
+          "comparable": false,
+          "note": "エンジンは生産・売上の損失率を表し、営業利益への影響（固定費の吸収等）はモデル化していない。参考値として記録。"
+        }
+      ]
+    },
+    "aisin_fire_1997": {
+      "split": "external",
+      "params": {
+        "severity": 0.02
+      },
+      "firm": {
+        "seed_ticker": "7259",
+        "seed_mean_loss_pct": 2.096,
+        "suppliers_mean_loss_pct": 0.0,
+        "firms_affected_gt1pct": 1,
+        "watch_losses_pct": {
+          "7203": 0.003
+        }
+      },
+      "comparisons": [
+        {
+          "key": "toyota_loss",
+          "comparable": true,
+          "note": "単一部品への供給集中が及ぼす影響を検証。エンジンは産業平均の投入係数と資本関係のみを持ち、部品単位の供給関係を持たない。過小予測が予想される（検証レポートの構造的限界L1と同じ原因）。",
+          "predicted_pct": 0.003,
+          "actual_pct": 2.0,
+          "ratio": 0.002,
+          "log_error": 6.502
+        }
+      ]
+    },
+    "noto_2024": {
+      "status": "reference_only",
+      "observed": [
+        {
+          "metric": "jri_gdp_loss_jpy_oku",
+          "value": -974,
+          "unit": "億円（GDP比▲0.02%）",
+          "window": "被災地域のフロー損失",
+          "source": "日本総合研究所 2024-01-23",
+          "source_url": "https://www.jri.co.jp/MediaLibrary/file/report/research/pdf/14753.pdf"
+        },
+        {
+          "metric": "cao_flow_direct_loss_jpy_oku",
+          "value": 1150,
+          "unit": "億円（約900〜1,150億円、石川・富山・新潟3県の2024年1〜3月）",
+          "window": "2024年1〜3月",
+          "source": "内閣府 令和6年能登半島地震の影響試算",
+          "source_url": "https://www5.cao.go.jp/keizai3/discussion-paper/dp241.pdf"
+        },
+        {
+          "metric": "cao_stock_damage_jpy_trillion",
+          "value": 2.6,
+          "unit": "兆円（約1.1〜2.6兆円、住宅・設備等のストック毀損）",
+          "window": "2024年",
+          "source": "内閣府 令和6年能登半島地震の影響試算",
+          "source_url": "https://www5.cao.go.jp/keizai3/r06noto/index.html"
+        }
+      ]
     }
   }
 }
