@@ -2,7 +2,12 @@
   "generated": "2026-11-11",
   "engine_params": {
     "pass_through": 0.05,
-    "prop_damp": 0.6
+    "prop_damp": 0.6,
+    "supply_gate": 10.0,
+    "supply_edges": {
+      "total": 688,
+      "with_cost_share": 369
+    }
   },
   "events": {
     "thai_flood_2011": {
@@ -169,8 +174,8 @@
       },
       "firm": {
         "seed_ticker": "7203",
-        "seed_mean_loss_pct": 0.409,
-        "suppliers_mean_loss_pct": 0.0006,
+        "seed_mean_loss_pct": 0.569,
+        "suppliers_mean_loss_pct": 0.0009,
         "firms_affected_gt1pct": 0
       },
       "comparisons": [
@@ -188,9 +193,9 @@
       },
       "firm": {
         "seed_ticker": "7203",
-        "seed_mean_loss_pct": 1.532,
-        "suppliers_mean_loss_pct": 0.0022,
-        "firms_affected_gt1pct": 1
+        "seed_mean_loss_pct": 2.233,
+        "suppliers_mean_loss_pct": 0.0033,
+        "firms_affected_gt1pct": 2
       },
       "comparisons": [
         {
@@ -209,13 +214,25 @@
         "seed_ticker": "6723",
         "seed_mean_loss_pct": 8.85,
         "suppliers_mean_loss_pct": 0.0,
-        "firms_affected_gt1pct": 1
+        "firms_affected_gt1pct": 1,
+        "watch_losses_pct": {
+          "7203": 0.0
+        }
       },
       "comparisons": [
         {
           "key": "renesas_loss",
           "comparable": true,
           "note": "severityの直接対応を検証。"
+        },
+        {
+          "key": "toyota_loss",
+          "comparable": true,
+          "note": "供給網メカニズムの独立検証。ただしルネサスの有報の主要販売先は半導体商社（WT Microelectronics・萩原エレクトロニクス）であり、F_jp企業との観測エッジが存在しないため、トヨタへの伝播はほぼ0%になることが予想される（開示ベース供給網のカバレッジ限界）。実際の影響も半導体不足全体（COVID需要・テキサス寒波等を含む）の一部であり、ルネサス火災のみへの帰属は分離不能。",
+          "predicted_pct": 0.0,
+          "actual_pct": 0.7,
+          "ratio": 0.0,
+          "log_error": 20.367
         }
       ]
     },
@@ -284,7 +301,7 @@
       },
       "firm": {
         "seed_ticker": "7261",
-        "seed_mean_loss_pct": 4.306,
+        "seed_mean_loss_pct": 4.19,
         "suppliers_mean_loss_pct": 0.0,
         "firms_affected_gt1pct": 1
       },
@@ -293,10 +310,10 @@
           "key": "mazda_production_loss",
           "comparable": true,
           "note": "severity（減産率）の直接対応を検証。熊本地震・サイバー攻撃と同じ形式の独立事例。",
-          "predicted_pct": 4.306,
+          "predicted_pct": 4.19,
           "actual_pct": 4.2,
-          "ratio": 1.025,
-          "log_error": 0.025
+          "ratio": 0.998,
+          "log_error": 0.002
         },
         {
           "key": "mazda_profit_impact",
@@ -312,22 +329,22 @@
       },
       "firm": {
         "seed_ticker": "7259",
-        "seed_mean_loss_pct": 2.096,
-        "suppliers_mean_loss_pct": 0.0,
-        "firms_affected_gt1pct": 1,
+        "seed_mean_loss_pct": 2.494,
+        "suppliers_mean_loss_pct": 0.0019,
+        "firms_affected_gt1pct": 2,
         "watch_losses_pct": {
-          "7203": 0.003
+          "7203": 1.12
         }
       },
       "comparisons": [
         {
           "key": "toyota_loss",
           "comparable": true,
-          "note": "単一部品への供給集中が及ぼす影響を検証。エンジンは産業平均の投入係数と資本関係のみを持ち、部品単位の供給関係を持たない。過小予測が予想される（検証レポートの構造的限界L1と同じ原因）。",
-          "predicted_pct": 0.003,
+          "note": "単一部品への供給集中が及ぼす影響を検証。v2.2で有価証券報告書の「主要な販売先」開示から構築した供給網エッジ（アイシン→トヨタ cost_share=3.65%、伝播係数=min(1, cost_share×SUPPLY_GATE=10)=0.365）により伝播する。実測の2.0%には達しない見込み（アイシンのトヨタ向け販売がトヨタCOGS比3.65%に希釈されるため。実際の事件はPバルブという単一部品の単一供給（トヨタ車の80〜90%）によるもので、企業単位の開示では捉えきれない部分集中）。",
+          "predicted_pct": 1.12,
           "actual_pct": 2.0,
-          "ratio": 0.002,
-          "log_error": 6.502
+          "ratio": 0.56,
+          "log_error": 0.58
         }
       ]
     },
@@ -360,5 +377,113 @@
         }
       ]
     }
-  }
+  },
+  "sensitivity_oil2x": [
+    {
+      "pass_through": 0.05,
+      "prop_damp": 0.1,
+      "jpn_mean_loss_pct": 0.463
+    },
+    {
+      "pass_through": 0.05,
+      "prop_damp": 0.4,
+      "jpn_mean_loss_pct": 0.661
+    },
+    {
+      "pass_through": 0.05,
+      "prop_damp": 0.9,
+      "jpn_mean_loss_pct": 1.754
+    },
+    {
+      "pass_through": 0.1,
+      "prop_damp": 0.1,
+      "jpn_mean_loss_pct": 1.028
+    },
+    {
+      "pass_through": 0.1,
+      "prop_damp": 0.4,
+      "jpn_mean_loss_pct": 1.457
+    },
+    {
+      "pass_through": 0.1,
+      "prop_damp": 0.9,
+      "jpn_mean_loss_pct": 3.756
+    },
+    {
+      "pass_through": 0.3,
+      "prop_damp": 0.1,
+      "jpn_mean_loss_pct": 3.203
+    },
+    {
+      "pass_through": 0.3,
+      "prop_damp": 0.4,
+      "jpn_mean_loss_pct": 4.482
+    },
+    {
+      "pass_through": 0.3,
+      "prop_damp": 0.9,
+      "jpn_mean_loss_pct": 10.668
+    },
+    {
+      "pass_through": 0.5,
+      "prop_damp": 0.1,
+      "jpn_mean_loss_pct": 5.354
+    },
+    {
+      "pass_through": 0.5,
+      "prop_damp": 0.4,
+      "jpn_mean_loss_pct": 7.402
+    },
+    {
+      "pass_through": 0.5,
+      "prop_damp": 0.9,
+      "jpn_mean_loss_pct": 16.471
+    }
+  ],
+  "sensitivity_thai_flood": [
+    {
+      "prop_damp": 0.1,
+      "jpn_c29_loss_pct": 0.987
+    },
+    {
+      "prop_damp": 0.4,
+      "jpn_c29_loss_pct": 5.29
+    },
+    {
+      "prop_damp": 0.9,
+      "jpn_c29_loss_pct": 19.774
+    }
+  ],
+  "sensitivity_supply_gate": [
+    {
+      "supply_gate": 5.0,
+      "event": "aisin_fire_1997",
+      "toyota_loss_pct": 0.439
+    },
+    {
+      "supply_gate": 5.0,
+      "event": "renesas_fire_2021",
+      "toyota_loss_pct": 0.0
+    },
+    {
+      "supply_gate": 10.0,
+      "event": "aisin_fire_1997",
+      "toyota_loss_pct": 1.12
+    },
+    {
+      "supply_gate": 10.0,
+      "event": "renesas_fire_2021",
+      "toyota_loss_pct": 0.0
+    },
+    {
+      "supply_gate": 20.0,
+      "event": "aisin_fire_1997",
+      "toyota_loss_pct": 2.984
+    },
+    {
+      "supply_gate": 20.0,
+      "event": "renesas_fire_2021",
+      "toyota_loss_pct": 0.0
+    }
+  ]
 }

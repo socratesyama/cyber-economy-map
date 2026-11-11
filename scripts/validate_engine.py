@@ -109,8 +109,14 @@ def main():
         registry = json.load(f)
 
     eng, se = load_engine()
-    results = {"generated": se.today, "engine_params": {"pass_through": se.PASS_THROUGH,
-                                                        "prop_damp": se.PROP_DAMP},
+    n_supply = eng.con.execute(
+        "SELECT COUNT(*), SUM(cost_share IS NOT NULL) FROM relation WHERE relation_type='supply_buyer_of'"
+    ).fetchone()
+    results = {"generated": se.today,
+               "engine_params": {"pass_through": se.PASS_THROUGH,
+                                 "prop_damp": se.PROP_DAMP,
+                                 "supply_gate": getattr(se, "SUPPLY_GATE", None),
+                                 "supply_edges": {"total": n_supply[0], "with_cost_share": n_supply[1]}},
                "events": {}}
 
     print("=" * 72)
@@ -268,6 +274,33 @@ def main():
             sens2.append({"prop_damp": pd, "jpn_c29_loss_pct": round(v, 3)})
             print(f"  thai pd={pd:.2f} → JPN_C29 {v:.3f}%")
         results["sensitivity_thai_flood"] = sens2
+
+    # ---------- SUPPLY_GATE 感応度（供給網エッジの伝播ゲート） ----------
+    if args.sensitivity and hasattr(se, "SUPPLY_GATE"):
+        print("\n" + "=" * 72)
+        print("感応度分析 — SUPPLY_GATE（供給網エッジの伝播係数 = min(1, cost_share×gate)）")
+        print("対象: アイシン火災1997（トヨタ減産2.0%）とルネサス火災2021（トヨタ減産0.7%）")
+        print("=" * 72)
+        gate_default = se.SUPPLY_GATE
+        sens3 = []
+        for gate in (5.0, 10.0, 20.0):
+            se.SUPPLY_GATE = gate
+            eng._load_firms()   # エッジ配列を gate に応じて再構築
+            for eid, tkr, sev in (("aisin_fire_1997", "7259", 0.02), ("renesas_fire_2021", "6723", 0.09)):
+                cid = eng.con.execute(
+                    "SELECT company_id FROM id_map WHERE id_type='ticker' AND id_value=?", (tkr,)).fetchone()
+                if not cid:
+                    continue
+                rng = random.Random(7)
+                mean, _, _ = eng.run("entity_failure", rng, iterations=80, seed_id=cid[0], severity=sev)
+                j = eng.con.execute(
+                    "SELECT company_id FROM id_map WHERE id_type='ticker' AND id_value='7203'").fetchone()
+                toyota_pct = float(mean[eng.firm_idx[j[0]]]) * 100
+                sens3.append({"supply_gate": gate, "event": eid, "toyota_loss_pct": round(toyota_pct, 3)})
+                print(f"  SUPPLY_GATE={gate:.0f} {eid}: トヨタ損失 {toyota_pct:.3f}%")
+        se.SUPPLY_GATE = gate_default
+        eng._load_firms()
+        results["sensitivity_supply_gate"] = sens3
 
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)

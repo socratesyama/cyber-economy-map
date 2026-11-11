@@ -17,3 +17,4 @@ viz/dist/
 !/viz/public/data/NOTICE
 !/viz/public/data/.gitkeep
 viz/data/*.db
+raw/supply_txt/

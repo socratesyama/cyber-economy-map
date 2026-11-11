@@ -73,6 +73,13 @@ PASS_THROUGH = _CAL["pass_through"]
 # prop_damp: Layer A伝播の減衰係数（代替調達・在庫・価格調整を表す）。
 #   2011年タイ洪水の日本の自動車生産への波及（実測 約9〜11%）から較正。
 PROP_DAMP = _CAL["prop_damp"]
+# SUPPLY_GATE: 供給網エッジの伝播係数 = min(1, cost_share × SUPPLY_GATE)。
+#   買い手のCOGSに占める仕入割合（cost_share）が大きいほど、仕入先停止時の買い手の
+#   生産制約が強まる（ジャストインタイム・単一供給の集中リスク）。
+#   10という値は有価証券報告書の「主要な販売先」10%超開示基準に由来する仮定であり、
+#   特定事例（アイシン火災等）へのフィッティングではない。感度分析は
+#   docs/validation-report.md を参照（SUPPLY_GATE=5/10/20）。
+SUPPLY_GATE = 10.0
 
 
 class Engine:
@@ -104,20 +111,33 @@ class Engine:
         self.firm_idx = {c: i for i, c in enumerate(self.firm_ids)}
         self.firm_mcap = np.array([self.nodes[c].get("mcap") or 0.0 for c in self.firm_ids])
 
-        # 企業グラフ（資本関係）: エッジ配列化
-        edges = []   # (src_firm_idx, dst_firm_idx, conf, spct_or_None, factor)
+        # 企業グラフ: エッジ配列化。エッジは2種類:
+        #   ownership_parent_of: 資本関係（親→子）。factor=0.5、depは持株比率由来
+        #   supply_buyer_of:     供給網（売り手→買い手）。factor = min(1, cost_share×SUPPLY_GATE)、dep=1
+        #                        （有価証券報告書「主要な販売先」の10%超開示に基づく観測値）
+        edges = []   # (src_firm_idx, dst_firm_idx, conf, spct_or_None, factor, dep_override)
         for r in self.con.execute("SELECT * FROM relation"):
             i, j = self.firm_idx.get(r["src_id"]), self.firm_idx.get(r["dst_id"])
             if i is None or j is None: continue
-            factor = 0.5 if r["relation_type"] == "ownership_parent_of" else 0.3
-            edges.append((i, j, r["confidence"] or 0.5, r["share_pct"], factor))
+            if r["relation_type"] == "supply_buyer_of":
+                basis = r["cost_share"] if r["cost_share"] is not None else r["revenue_share"]
+                if not basis: continue
+                factor = min(1.0, float(basis) * SUPPLY_GATE)
+                # 供給エッジは依存度を確定値で扱う: 仕入先の生産停止は常に買い手へ伝播する
+                edges.append((i, j, r["confidence"] or 0.9, None, factor, 1.0))
+            else:
+                factor = 0.5 if r["relation_type"] == "ownership_parent_of" else 0.3
+                edges.append((i, j, r["confidence"] or 0.5, r["share_pct"], factor, None))
         self.e_src = np.array([e[0] for e in edges], dtype=np.int32)
         self.e_dst = np.array([e[1] for e in edges], dtype=np.int32)
         self.e_conf = np.array([e[2] for e in edges], dtype=np.float64)
         self.e_spct = np.array([np.nan if e[3] is None else e[3] for e in edges], dtype=np.float64)
         self.e_factor = np.array([e[4] for e in edges], dtype=np.float64)
-        self.e_rand_dep = np.isnan(self.e_spct)     # share_pct 未観測 → 毎回ランダム
-        self.e_dep_obs = np.where(self.e_rand_dep, 0.5, np.minimum(1.0, self.e_spct / 100.0))
+        # dep の確定値（供給エッジ）。NaN → 従来どおり share_pct 由来 or ランダム
+        dep_fix = np.array([np.nan if e[5] is None else e[5] for e in edges], dtype=np.float64)
+        self.e_dep_fix = dep_fix
+        self.e_rand_dep = np.isnan(self.e_spct) & np.isnan(dep_fix)   # 両方未観測 → 毎回ランダム
+        self.e_dep_obs = np.where(np.isnan(dep_fix), np.minimum(1.0, self.e_spct / 100.0), dep_fix)
 
         # 観測仕入エッジ（置換ルール用）: ほぼ存在しないが互換性のため保持
         self.obs_supply = defaultdict(list)

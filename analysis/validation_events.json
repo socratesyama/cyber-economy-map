@@ -1,858 +1,886 @@
 {
-  "version": "2.0",
-  "description": "実際に起きた過去事例の登録簿。各イベントのエンジン入力（scenario_params）、観測された影響（observed、出典付き）、および比較方法（comparisons）を定義する。トレーニングイベントでパラメータを較正し、ホールドアウトイベントで較正の汎化性を検証する。方法論: docs/validation-report.md",
-  "calibration_protocol": {
-    "train_events": [
-      "thai_flood_2011",
-      "tohoku_2011",
-      "ukraine_2022",
-      "covid_2020"
+ "version": "2.0",
+ "description": "実際に起きた過去事例の登録簿。各イベントのエンジン入力（scenario_params）、観測された影響（observed、出典付き）、および比較方法（comparisons）を定義する。トレーニングイベントでパラメータを較正し、ホールドアウトイベントで較正の汎化性を検証する。方法論: docs/validation-report.md",
+ "calibration_protocol": {
+  "train_events": [
+   "thai_flood_2011",
+   "tohoku_2011",
+   "ukraine_2022",
+   "covid_2020"
+  ],
+  "holdout_events": [
+   "sea_chip_shortage_2021",
+   "suez_2021",
+   "red_sea_2024",
+   "toyota_cyber_2022",
+   "kumamoto_2016",
+   "renesas_fire_2021"
+  ],
+  "reference_events": [
+   "maersk_notpetya_2017",
+   "ms_cyber_2025"
+  ],
+  "note": "参考イベント（reference_events）は日本上場企業データベースに対象企業が含まれないためエンジンで再現できず、観測値のみを記録する。",
+  "external_events": [
+   "fy2021_fuel_surge",
+   "westrain_2018_mazda",
+   "aisin_fire_1997",
+   "noto_2024"
+  ],
+  "external_note": "外部検証イベント（external）。較正（train/holdout）完了後に追加し、パラメータ調整には一切使用していない。較正済みパラメータ（pass_through=0.05, prop_damp=0.6）のまま検証した結果を docs/validation-report.md に記録する。"
+ },
+ "events": [
+  {
+   "event_id": "thai_flood_2011",
+   "name": "タイ洪水（2011年10月〜12月）",
+   "date": "2011-10-10",
+   "category": "supply_shock_foreign",
+   "split": "train",
+   "scenario": "war_blockade",
+   "scenario_params": {
+    "countries": [
+     "THA"
     ],
-    "holdout_events": [
-      "sea_chip_shortage_2021",
-      "suez_2021",
-      "red_sea_2024",
-      "toyota_cyber_2022",
-      "kumamoto_2016",
-      "renesas_fire_2021"
-    ],
-    "reference_events": [
-      "maersk_notpetya_2017",
-      "ms_cyber_2025"
-    ],
-    "note": "参考イベント（reference_events）は日本上場企業データベースに対象企業が含まれないためエンジンで再現できず、観測値のみを記録する。",
-    "external_events": [
-      "fy2021_fuel_surge",
-      "westrain_2018_mazda",
-      "aisin_fire_1997",
-      "noto_2024"
-    ],
-    "external_note": "外部検証イベント（external）。較正（train/holdout）完了後に追加し、パラメータ調整には一切使用していない。較正済みパラメータ（pass_through=0.05, prop_damp=0.6）のまま検証した結果を docs/validation-report.md に記録する。"
-  },
-  "events": [
+    "stop_rate": 0.4
+   },
+   "scenario_input_basis": "タイの生産は被災工業団地（アユタヤ等）の停止で大幅低下。HDDはタイが世界生産の約40%（IHS iSuppli）。stop_rate=0.4はタイ製造業の平均的な稼働低下率の概算。",
+   "coeff_overrides": [
     {
-      "event_id": "thai_flood_2011",
-      "name": "タイ洪水（2011年10月〜12月）",
-      "date": "2011-10-10",
-      "category": "supply_shock_foreign",
-      "split": "train",
-      "scenario": "war_blockade",
-      "scenario_params": {
-        "countries": [
-          "THA"
-        ],
-        "stop_rate": 0.4
+     "buyer_ci": "JPN_C29",
+     "seller_ci": "THA_C26",
+     "effective_input_share": 0.22,
+     "basis": "ICIO平均係数（THA_C26→JPN_C29 ≈ 0.5%）は製品レベルの集中を反映しない。タイ洪水でトヨタの国内生産は約65,000台減少（2011年10月10日〜11月25日、イベント期間中の国内生産の約11%）したことから、日本の自動車生産のタイ電子部品への実効依存度を逆算して22%とする。これは観測されたフローではなく較正シナリオ仮定である。",
+     "sources": [
+      {
+       "name": "Reuters (2011-12-02): トヨタ、タイ洪水で世界で約21万5000台減産（うち国内6万5000台）",
+       "url": "https://www.reuters.com/jp/article/markets/japan/7203t5-idUST9E7MP01B/"
       },
-      "scenario_input_basis": "タイの生産は被災工業団地（アユタヤ等）の停止で大幅低下。HDDはタイが世界生産の約40%（IHS iSuppli）。stop_rate=0.4はタイ製造業の平均的な稼働低下率の概算。",
-      "coeff_overrides": [
-        {
-          "buyer_ci": "JPN_C29",
-          "seller_ci": "THA_C26",
-          "effective_input_share": 0.22,
-          "basis": "ICIO平均係数（THA_C26→JPN_C29 ≈ 0.5%）は製品レベルの集中を反映しない。タイ洪水でトヨタの国内生産は約65,000台減少（2011年10月10日〜11月25日、イベント期間中の国内生産の約11%）したことから、日本の自動車生産のタイ電子部品への実効依存度を逆算して22%とする。これは観測されたフローではなく較正シナリオ仮定である。",
-          "sources": [
-            {
-              "name": "Reuters (2011-12-02): トヨタ、タイ洪水で世界で約21万5000台減産（うち国内6万5000台）",
-              "url": "https://www.reuters.com/jp/article/markets/japan/7203t5-idUST9E7MP01B/"
-            },
-            {
-              "name": "IHS iSuppli: タイ洪水でQ4 HDD生産は四半期比28%減少",
-              "url": "https://www.pcworld.com/article/477848/thai_floods_hit_q4_hard_drive_production_says_research_firm.html"
-            }
-          ]
-        }
-      ],
-      "observed": [
-        {
-          "metric": "toyota_domestic_production_loss_units",
-          "value": 65000,
-          "unit": "台",
-          "window": "2011-10-10〜11-25",
-          "source": "Reuters",
-          "source_url": "https://www.reuters.com/jp/article/markets/japan/7203t5-idUST9E7MP01B/"
-        },
-        {
-          "metric": "toyota_global_production_loss_units",
-          "value": 215000,
-          "unit": "台",
-          "window": "2011-10-10〜11-25",
-          "source": "Reuters",
-          "source_url": "https://www.reuters.com/jp/article/markets/japan/7203t5-idUST9E7MP01B/"
-        },
-        {
-          "metric": "toyota_fy2011_volume_cut_units",
-          "value": 230000,
-          "unit": "台",
-          "window": "2011年度通期",
-          "source": "Car Watch: トヨタ2011年度見通し下方修正",
-          "source_url": "https://car.watch.impress.co.jp/docs/news/497105.html"
-        },
-        {
-          "metric": "hdd_production_drop_pct",
-          "value": -28,
-          "unit": "%（QoQ）",
-          "window": "2011年Q4",
-          "source": "IHS iSuppli via PCWorld",
-          "source_url": "https://www.pcworld.com/article/477848/thai_floods_hit_q4_hard_drive_production_says_research_firm.html"
-        },
-        {
-          "metric": "toyota_fy2011_op_profit_cut_jpy_oku",
-          "value": -2500,
-          "unit": "億円",
-          "window": "2011年度通期（東日本大震災・タイ洪水・円高合計）",
-          "source": "Car Watch",
-          "source_url": "https://car.watch.impress.co.jp/docs/news/497105.html"
-        },
-        {
-          "metric": "aichi_ip_nov2011_mom_pct",
-          "value": -9.1,
-          "unit": "%（前月比）",
-          "window": "2011年11月",
-          "source": "愛知県: タイ洪水の影響を受けた鉱工業生産指数",
-          "source_url": "https://www.pref.aichi.jp/uploaded/attachment/8229.pdf"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "jpn_c29_loss",
-          "model": "layerA_loss(JPN_C29)（coeff_overrides適用後、イベント期間中）",
-          "observed": "toyota_domestic_production_loss_pct（イベント期間の国内生産の約11%）",
-          "comparable": true,
-          "note": "業種平均（JPN_C29）とトヨタ固有の数値の差（愛知県IP ▲9.1%）は係数の不確実性の範囲として扱う。"
-        }
-      ]
-    },
-    {
-      "event_id": "tohoku_2011",
-      "name": "東日本大震災（2011年3月11日）",
-      "date": "2011-03-11",
-      "category": "supply_shock_domestic",
-      "split": "train",
-      "scenario": "war_blockade",
-      "scenario_params": {
-        "countries": [
-          "JPN"
-        ],
-        "stop_rate": 0.155
-      },
-      "scenario_input_basis": "2011年3月の鉱工業生産指数 前月比▲15.5%（統計開始以来最大の低下、経済産業省）を衝撃入力とする。1ヶ月のショックであるため年率換算は12分の1。",
-      "observed": [
-        {
-          "metric": "japan_ip_2011_03_mom_pct",
-          "value": -15.5,
-          "unit": "%（前月比）",
-          "window": "2011年3月",
-          "source": "経済産業省: 震災が鉱工業生産に及ぼした影響について",
-          "source_url": "https://www.meti.go.jp/statistics/toppage/report/bunseki/pdf/h23/h4a1106j1.pdf"
-        },
-        {
-          "metric": "japan_ip_disaster_area_mom_pct",
-          "value": -32.1,
-          "unit": "%（前月比）",
-          "window": "2011年3月・被災地",
-          "source": "内閣府防災推進・災害リスク管理費等研究会資料",
-          "source_url": "https://www.bousai.go.jp/kyoiku/kigyou/keizoku/keizoku11/kentoukai11_05.pdf"
-        },
-        {
-          "metric": "japan_ip_non_disaster_mom_pct",
-          "value": -13.7,
-          "unit": "%（前月比）",
-          "window": "2011年3月・被災地以外",
-          "source": "同上",
-          "source_url": "https://www.bousai.go.jp/kyoiku/kigyou/keizoku/keizoku11/kentoukai11_05.pdf"
-        },
-        {
-          "metric": "japan_auto_production_mar2011_yoy_pct",
-          "value": -57.3,
-          "unit": "%（前年同月比・四輪車全体）",
-          "window": "2011年3月",
-          "source": "自工会生産統計（立命館大学DP掲載表）",
-          "source_url": "https://www.ritsumei.ac.jp/acd/re/ssrc/result/dp/dp017.pdf"
-        },
-        {
-          "metric": "japan_gdp_growth_impact_pp",
-          "value": -0.47,
-          "unit": "ポイント（震災翌年の実質GDP成長率）",
-          "window": "2011年度",
-          "source": "Carvalho, Nirei, Saito & Tahbaz-Salehi (2021) QJE 136(2)",
-          "source_url": "https://www.kellogg.northwestern.edu/faculty/alirezat/JapanEQ.pdf"
-        },
-        {
-          "metric": "toyota_fy2010_q4_disaster_op_loss_jpy_oku",
-          "value": -1100,
-          "unit": "億円",
-          "window": "2011年1-3月期",
-          "source": "トヨタ2011年3月期決算（webCG記事）",
-          "source_url": "https://www.webcg.net/articles/-/4305"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "propagation_amplification",
-          "model": "JPN全産業伝播後損失 / 直接衝撃(15.5%)",
-          "observed": "Carvalho et al.: 実測GDP影響(-0.47pt)は面積効果のみ(-0.1pt)の4.7倍、リンク切断反実仮説(-0.21pt)の2.2倍",
-          "comparable": true,
-          "note": "エンジンはピーク時の粗損失を計算し復旧はモデル化しないため、年率GDP影響との直接比較は不可。伝播による増幅率のみ比較する。"
-        }
-      ]
-    },
-    {
-      "event_id": "ukraine_2022",
-      "name": "ロシア・ウクライナ戦争に伴うエネルギー価格急騰（2022年）",
-      "date": "2022-02-24",
-      "category": "commodity_price_shock",
-      "split": "train",
-      "scenario": "oil_price",
-      "scenario_params": {
-        "commodity": "lng_japan",
-        "multiplier": 2.04
-      },
-      "scenario_input_basis": "2022年LNG輸入単価は前年比+103.9%（トン当たり約5.7万円→11.7万円、財務省貿易統計）。価格上昇率104%をmultiplier 2.04として入力。",
-      "observed": [
-        {
-          "metric": "tepco_fy2022_recurring_loss_jpy_oku",
-          "value": -2853,
-          "unit": "億円",
-          "window": "2022年度（2022年4月〜2023年3月）",
-          "source": "東京電力 2022年度決算",
-          "source_url": "https://www.tepco.co.jp/press/release/2023/1665289_8713.html"
-        },
-        {
-          "metric": "tepco_fy2022_revenue_jpy_oku",
-          "value": 77986,
-          "unit": "億円",
-          "window": "2022年度",
-          "source": "東京電力 2022年度決算",
-          "source_url": "https://www.tepco.co.jp/about/ir/library/presentation/pdf/230428setsu-j.pdf"
-        },
-        {
-          "metric": "tepco_fy2022_recurring_deterioration_pct",
-          "value": -4.2,
-          "unit": "%（前年比減益3,276億円/売上高）",
-          "window": "2022年度",
-          "source": "東京電力 2022年度決算より算出",
-          "source_url": "https://www.tepco.co.jp/press/release/2023/1665289_8713.html"
-        },
-        {
-          "metric": "japan_cpi_electricity_2022_avg_pct",
-          "value": 20.0,
-          "unit": "%（前年比）",
-          "window": "2022年通年",
-          "source": "総務省: 2022年平均消費者物価指数",
-          "source_url": "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040028295&fileKind=2"
-        },
-        {
-          "metric": "japan_cpi_gas_2022_avg_pct",
-          "value": 18.6,
-          "unit": "%（前年比）",
-          "window": "2022年通年",
-          "source": "総務省: 2022年平均消費者物価指数",
-          "source_url": "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040028295&fileKind=2"
-        },
-        {
-          "metric": "japan_lng_import_value_2022_pct",
-          "value": 97.5,
-          "unit": "%（前年比）",
-          "window": "2022年通年",
-          "source": "ガスエネニュース（貿易統計に基づく）",
-          "source_url": "https://www.gas-enenews.co.jp/lpgas-lng/608/"
-        },
-        {
-          "metric": "japan_terms_of_trade_loss_2022q3",
-          "value": 19.0,
-          "unit": "兆円（四半期の所得流出）",
-          "window": "2022年7-9月期",
-          "source": "内閣府: 日本経済2022-2023",
-          "source_url": "https://www5.cao.go.jp/keizai3/2022/0203nk/pdf/n22_1.pdf"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "tepco_margin_loss",
-          "model": "layerA_loss(JPN_D)（LNG×2.04）",
-          "observed": "tepco_fy2022_recurring_deterioration_pct = -4.2%",
-          "comparable": true,
-          "note": "電気料金への転嫁（規制・燃料費調整制度）と政府支援により実際の損失はコスト増より大幅に小さい。モデルのpass_through（マージン圧迫率）をこの観測で較正する。"
-        },
-        {
-          "key": "cpi_pass_through",
-          "model": "pass_throughから導かれる価格転嫁率 1-pass_through",
-          "observed": "japan_cpi_electricity_2022_avg_pct = +20.0%（LNG輸入単価+103.9%に対し）",
-          "comparable": true,
-          "note": "観測された価格転嫁率は約19%。ただし燃料費調整制度の遅延・政府支援の影響を含む。"
-        }
-      ]
-    },
-    {
-      "event_id": "covid_2020",
-      "name": "COVID-19初動パンデミック（2020年）",
-      "date": "2020-04-01",
-      "category": "global_demand_and_supply_shock",
-      "split": "train",
-      "scenario": "war_blockade",
-      "scenario_params": {
-        "countries": "ALL",
-        "stop_rate": 0.048
-      },
-      "scenario_input_basis": "2020年の日本の実質GDP成長率 -4.8%（内閣府ESRI）を年間平均の生産・需要低下として入力。全ての国・産業に一様に適用。",
-      "observed": [
-        {
-          "metric": "japan_real_gdp_2020_pct",
-          "value": -4.8,
-          "unit": "%（前年比）",
-          "window": "2020年暦年",
-          "source": "内閣府ESRI GDP速報",
-          "source_url": "https://www.esri.cao.go.jp/jp/sna/data/data_list/sokuhou/files/2020/qe204/pdf/qepoint2041.pdf"
-        },
-        {
-          "metric": "japan_auto_production_2020_pct",
-          "value": -16.3,
-          "unit": "%（前年比・乗用車メーカー8社国内生産）",
-          "window": "2020年暦年",
-          "source": "日本自動車工業会",
-          "source_url": "https://www.aba-j.or.jp/info/industry/14479/"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "japan_gdp",
-          "model": "JPN全産業伝播後損失（年間平均）",
-          "observed": "japan_real_gdp_2020_pct = -4.8%",
-          "comparable": true,
-          "note": "一様ショックのため業種間の不均一性（自動車-16.3%等）は再現しない。"
-        }
-      ]
-    },
-    {
-      "event_id": "sea_chip_shortage_2021",
-      "name": "半導体・東南アジア部品不足（2021年5-10月）",
-      "date": "2021-09-19",
-      "category": "supply_shock_foreign",
-      "split": "holdout",
-      "scenario": "war_blockade",
-      "scenario_params": {
-        "countries": [
-          "MYS",
-          "VNM",
-          "THA"
-        ],
-        "stop_rate": 0.3
-      },
-      "scenario_input_basis": "マレーシア・ベトナム等のCOVID感染拡大による部品工場稼働低下とルネサス那珂工場火災（2021年3月）が重なり世界的な半導体不足が発生。トヨタは2021年9月の世界生産計画を約90万台→約54万台に引き下げた。stop_rate=0.3は概算。",
-      "coeff_overrides": [
-        {
-          "buyer_ci": "JPN_C29",
-          "seller_ci": "MYS_C26",
-          "effective_input_share": 0.22,
-          "basis": "タイ洪水（train）で較正したJPN_C29←C26系の実効依存度22%をそのまま転用する（ホールドアウト検証）。",
-          "sources": [
-            {
-              "name": "トヨタ: 2021年9月・10月の生産計画見直しについて",
-              "url": "https://global.toyota/jp/newsroom/corporate/36003625.html"
-            },
-            {
-              "name": "BBC: トヨタ9月世界生産4割減（約36万台減）",
-              "url": "https://www.bbc.com/japanese/58277673.amp"
-            }
-          ]
-        }
-      ],
-      "observed": [
-        {
-          "metric": "toyota_sept2021_global_production_cut_units",
-          "value": -360000,
-          "unit": "台",
-          "window": "2021年9月",
-          "source": "BBC（トヨタ発表に基づく）",
-          "source_url": "https://www.bbc.com/japanese/58277673.amp"
-        },
-        {
-          "metric": "toyota_sept2021_global_production_cut_pct",
-          "value": -40,
-          "unit": "%（計画比）",
-          "window": "2021年9月",
-          "source": "トヨタ: 2021年9月ならびに10月の生産計画見直しについて",
-          "source_url": "https://global.toyota/jp/newsroom/corporate/36003625.html"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "jpn_c29_loss",
-          "model": "layerA_loss(JPN_C29)（coeff_overrides転用）",
-          "observed": "toyota_sept2021_global_production_cut_pct = -40%（月次）",
-          "comparable": true,
-          "note": "タイ洪水で較正した実効依存度が別イベントに転用できるかを検証する（ホールドアウト）。"
-        }
-      ]
-    },
-    {
-      "event_id": "suez_2021",
-      "name": "スエズ運河閉塞（Ever Given座礁、2021年3月23-29日）",
-      "date": "2021-03-23",
-      "category": "chokepoint",
-      "split": "holdout",
-      "scenario": "chokepoint",
-      "scenario_params": {
-        "route_id": "suez",
-        "severity": 0.0164
-      },
-      "scenario_input_basis": "6日間の閉塞。年間輸送量に対する期間比 severity = 6/365 = 0.0164。",
-      "observed": [
-        {
-          "metric": "trade_held_up_usd_per_day",
-          "value": 9.6,
-          "unit": "十億ドル/日",
-          "window": "閉塞中",
-          "source": "Lloyd's List（BBC報道）",
-          "source_url": "https://www.bbc.com/news/business-56559073"
-        },
-        {
-          "metric": "global_trade_loss_usd_per_week",
-          "value": 8.0,
-          "unit": "十億ドル/週（6-10の中央値）",
-          "window": "閉塞中",
-          "source": "Allianz試算（Reuters）",
-          "source_url": "https://www.reuters.com/article/egypt-suezcanal-ship-costs/suez-canal-blockage-could-cost-6-bln-to-10-bln-in-lost-trade-allianz-idUSL8N2LO4B1"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "japan_trade_impact",
-          "model": "JPN全産業のLayer A損失（年率換算×6/365）",
-          "observed": "Allianz: 世界的には6-10十億ドル/週。日本固有の金額は信頼できる推計がなく比較不能",
-          "comparable": false,
-          "note": "6日間の遅延は在庫と迂回で大部分が吸収され、日本の月次生産指数への検出可能な影響は無かった。エンジンも微小な損失を出すことを確認する（数量整合性の下限検証）。"
-        }
-      ]
-    },
-    {
-      "event_id": "red_sea_2024",
-      "name": "紅海危機（フーシ派攻撃による迂回、2023年12月〜2024年）",
-      "date": "2023-12-15",
-      "category": "chokepoint",
-      "split": "holdout",
-      "scenario": "chokepoint",
-      "scenario_params": {
-        "route_id": "suez",
-        "severity": 0.42
-      },
-      "scenario_input_basis": "UNCTAD: スエズ運河通航量はピーク比42%減少。severity=0.42。",
-      "observed": [
-        {
-          "metric": "drewry_wci_increase_pct",
-          "value": 170,
-          "unit": "%（2024年、平時比）",
-          "window": "2024年半ばピーク",
-          "source": "World Bank: The Far-Reaching Impact of the Red Sea Shipping Crisis",
-          "source_url": "https://openknowledge.worldbank.org/server/api/core/bitstreams/5596cfd9-821a-47db-939f-ed485cbaea48/content"
-        },
-        {
-          "metric": "suez_transits_decline_pct",
-          "value": -42,
-          "unit": "%（ピーク比）",
-          "window": "2024年",
-          "source": "UNCTAD",
-          "source_url": "https://unctad.org/news/unprecedented-shipping-disruptions-raise-risk-global-trade-unctad-warns"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "shipping_rates",
-          "model": "chokepointチャネルの代替経路コスト増",
-          "observed": "drewry_wci_increase_pct = +170%",
-          "comparable": false,
-          "note": "エンジンは数量障害（輸送シェア×severity）をモデル化し運賃（価格）はモデル化しない。価格対応は範囲外として文書化する。"
-        }
-      ]
-    },
-    {
-      "event_id": "toyota_cyber_2022",
-      "name": "トヨタ仕入先サイバー攻撃による国内全工場停止（2022年3月1日）",
-      "date": "2022-03-01",
-      "category": "cyber_supply_shock",
-      "split": "holdout",
-      "scenario": "entity_failure",
-      "scenario_params": {
-        "ticker": "7203",
-        "severity": 0.004
-      },
-      "scenario_input_basis": "小島プレス工業のシステム障害（サイバー攻撃とみられる）により、トヨタは国内全14工場28ラインを1日停止。severity = 1日/年間稼働日250日 = 0.004。",
-      "observed": [
-        {
-          "metric": "toyota_production_impact_units",
-          "value": 13000,
-          "unit": "台",
-          "window": "2022年3月1日",
-          "source": "Reuters（Newsweek Japan）",
-          "source_url": "https://www.newsweekjapan.jp/headlines/business/2022/02/374016.php"
-        },
-        {
-          "metric": "toyota_daily_domestic_production_units",
-          "value": 13000,
-          "unit": "台/日（国内生産ペース）",
-          "window": "2022年",
-          "source": "東洋経済",
-          "source_url": "https://toyokeizai.net/articles/-/577232?display=b"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "toyota_loss",
-          "model": "entity_failure(7203, severity=0.004)のトヨタ損失率",
-          "observed": "1日分の生産 ≈ 年間生産の0.4%",
-          "comparable": true,
-          "note": "severity（期間×稼働率）の直接対応を検証。伝播（子会社・他社への波及）はタイとダイハツも停止したことが観測と整合する。"
-        }
-      ]
-    },
-    {
-      "event_id": "kumamoto_2016",
-      "name": "熊本地震（2016年4月14-16日）",
-      "date": "2016-04-14",
-      "category": "domestic_disaster",
-      "split": "holdout",
-      "scenario": "entity_failure",
-      "scenario_params": {
-        "ticker": "7203",
-        "severity": 0.0154
-      },
-      "scenario_input_basis": "トヨタは部品供給途絶により、4月18-23日に国内の完成車工場を段階的に停止（20-23日は全量産ライン停止）。全体で約5万台減産。severity = 50,000台 ÷ (13,000台/日 × 250日) ≈ 0.0154。",
-      "observed": [
-        {
-          "metric": "toyota_production_impact_units",
-          "value": 50000,
-          "unit": "台",
-          "window": "2016年4月18-23日",
-          "source": "トヨタ発表（日経報道・東北大学IRIDeS資料）",
-          "source_url": "https://irides.tohoku.ac.jp/media/files/earthquake/eq/20160520_kumamotoeq_bcp_maruya.pdf"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "toyota_loss",
-          "model": "entity_failure(7203, severity=0.0154)のトヨタ損失率",
-          "observed": "約5万台 ≈ 年間国内生産の1.5%",
-          "comparable": true,
-          "note": "severityの直接対応を検証。"
-        }
-      ]
-    },
-    {
-      "event_id": "renesas_fire_2021",
-      "name": "ルネサス那珂工場火災（2021年3月19日）",
-      "date": "2021-03-19",
-      "category": "entity_failure",
-      "split": "holdout",
-      "scenario": "entity_failure",
-      "scenario_params": {
-        "ticker": "6723",
-        "severity": 0.09
-      },
-      "scenario_input_basis": "那珂工場300mmライン（月商約170億円、全社売上の3割弱）が約1ヶ月停止し代替生産で段階回復。Q2（4-6月期）の売上減少見込み170億円 ≈ 四半期収益の9%。severity=0.09。",
-      "observed": [
-        {
-          "metric": "renesas_q2_revenue_impact_jpy_oku",
-          "value": -170,
-          "unit": "億円",
-          "window": "2021年4-6月期",
-          "source": "Reuters Japan",
-          "source_url": "https://jp.reuters.com/article/renesas-resilts-idJPKBN2CF0P9"
-        },
-        {
-          "metric": "renesas_q2_op_impact_jpy_oku",
-          "value": -140,
-          "unit": "億円（Non-GAAP営業損益）",
-          "window": "2021年4-6月期",
-          "source": "EE Times Japan",
-          "source_url": "https://eetimes.itmedia.co.jp/ee/articles/2104/28/news137.html"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "renesas_loss",
-          "model": "entity_failure(6723, severity=0.09)のルネサス損失率",
-          "observed": "四半期売上の約9%",
-          "comparable": true,
-          "note": "severityの直接対応を検証。"
-        }
-      ]
-    },
-    {
-      "event_id": "maersk_notpetya_2017",
-      "name": "NotPetyaランサムウェア（A.P. モラー・マースク、2017年6月）",
-      "date": "2017-06-27",
-      "category": "cyber",
-      "split": "reference",
-      "scenario": null,
-      "scenario_params": {},
-      "observed": [
-        {
-          "metric": "maersk_loss_usd_million",
-          "value": 300,
-          "unit": "百万ドル（上限推計）",
-          "window": "2017年",
-          "source": "Maersk決算説明（The Register / CNBC報道）",
-          "source_url": "https://www.theregister.com/security/2017/08/16/notpetya-ransomware-attack-cost-us-300m-shipping-giant-maersk/1343911"
-        }
-      ],
-      "comparisons": [],
-      "comparability_note": "マースクはデンマーク企業であり日本上場企業データベースに含まれないためエンジンで再現できない。観測値のみ記録。"
-    },
-    {
-      "event_id": "ms_cyber_2025",
-      "name": "M&Sサイバー攻撃（2025年4月〜）",
-      "date": "2025-04-25",
-      "category": "cyber",
-      "split": "reference",
-      "scenario": null,
-      "scenario_params": {},
-      "observed": [
-        {
-          "metric": "ms_operating_profit_impact_gbp_million",
-          "value": -300,
-          "unit": "百万ポンド（運営利益影響の初期推計）",
-          "window": "2025年度",
-          "source": "Reuters",
-          "source_url": "https://www.reuters.com/business/media-telecom/britains-ms-says-cyberattack-cost-400-million-2025-05-21/"
-        },
-        {
-          "metric": "ms_actual_costs_gbp_million",
-          "value": 136,
-          "unit": "百万ポンド（後判明した実費用）",
-          "window": "2025年度",
-          "source": "The Register",
-          "source_url": "https://www.theregister.com/security/2025/11/05/ms-pegs-cyber-cleanup-costs-at-136m-profits-tumble/325250"
-        }
-      ],
-      "comparisons": [],
-      "comparability_note": "M&Sは英国企業であり日本上場企業データベースに含まれない。観測値のみ記録（初期推計と実額の乖離に注意: サイバー事象の影響額推計は2倍以上変動し得る）。"
-    },
-    {
-      "event_id": "fy2021_fuel_surge",
-      "name": "FY2021燃料費高騰（2021年度、ウクライナ危機前）",
-      "date": "2021-04-01",
-      "category": "commodity_price_shock",
-      "split": "external",
-      "scenario": "oil_price",
-      "scenario_params": {
-        "commodity": "lng_japan",
-        "multiplier": 1.607
-      },
-      "scenario_input_basis": "2021年度のLNG輸入CIF価格は前年度比+60.7%（389→626 US$/トン、IEEJ『2021年度エネルギー需給実績（速報）』）。multiplier 1.607として入力。較正に使用したFY2022（+103.9%）とは別年度の独立事例。",
-      "observed": [
-        {
-          "metric": "tepco_fy2021_recurring_profit_jpy_oku",
-          "value": 449,
-          "unit": "億円",
-          "window": "2021年度（2021年4月〜2022年3月）",
-          "source": "東京電力 2021年度決算",
-          "source_url": "https://www.tepco.co.jp/press/release/2022/1662710_8712.html"
-        },
-        {
-          "metric": "tepco_fy2020_recurring_profit_jpy_oku",
-          "value": 1898,
-          "unit": "億円",
-          "window": "2020年度",
-          "source": "東京電力 2021年度決算（前年比較）",
-          "source_url": "https://www.tepco.co.jp/press/release/2022/1662710_8712.html"
-        },
-        {
-          "metric": "tepco_fy2021_revenue_jpy_oku",
-          "value": 53099,
-          "unit": "億円",
-          "window": "2021年度",
-          "source": "東京電力 2021年度決算（FNN報道）",
-          "source_url": "https://www.fnn.jp/articles/-/353950"
-        },
-        {
-          "metric": "tepco_fy2021_recurring_deterioration_pct",
-          "value": -2.73,
-          "unit": "%（前年比減益1,449億円/売上高5兆3,099億円）",
-          "window": "2021年度",
-          "source": "東京電力 2021年度決算より算出",
-          "source_url": "https://www.tepco.co.jp/press/release/2022/1662710_8712.html"
-        },
-        {
-          "metric": "japan_lng_cif_price_fy2021_pct",
-          "value": 60.7,
-          "unit": "%（前年度比、389→626 US$/トン）",
-          "window": "2021年度",
-          "source": "IEEJ 2021年度エネルギー需給実績（速報）",
-          "source_url": "https://eneken.ieej.or.jp/data/10787.pdf"
-        },
-        {
-          "metric": "tepco_fy2021_recurring_change_pct",
-          "value": -76.3,
-          "unit": "%（前年比）",
-          "window": "2021年度",
-          "source": "東京電力 2021年度決算",
-          "source_url": "https://www.tepco.co.jp/press/release/2022/1662710_8712.html"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "tepco_margin_loss",
-          "model": "layerA_loss(JPN_D)（LNG×1.607）",
-          "observed": "tepco_fy2021_recurring_deterioration_pct = -2.73%",
-          "comparable": true,
-          "actual_value_pct": 2.73,
-          "predict_from": "layerA.jpn_d_loss_pct",
-          "note": "FY2021は小売電力量減少（売上高▲9.5%）もあり燃料費以外の要因を含む。減益の主因はJERAの燃料費調整制度の期ずれ影響（規制のため価格転嫁が遅延）で、pass_through=0.05の較正値と整合する方向。パラメータ調整は行っていない。"
-        }
-      ]
-    },
-    {
-      "event_id": "westrain_2018_mazda",
-      "name": "西日本豪雨によるマツダ生産停止（2018年7月）",
-      "date": "2018-07-06",
-      "category": "domestic_disaster",
-      "split": "external",
-      "scenario": "entity_failure",
-      "scenario_params": {
-        "ticker": "7261",
-        "severity": 0.042
-      },
-      "scenario_input_basis": "平成30年7月豪雨でマツダは広島の本社工場（宇品第1・第2）・防府工場を停止・減産し、9月10日に通常操業へ復旧。当初計画比の減産は車両44千台＋海外生産用部品23千台＝67千台。2018年（1〜12月）の全世界生産1,596,767台に対する比率4.2%をseverityとした。",
-      "observed": [
-        {
-          "metric": "mazda_production_loss_units",
-          "value": 67000,
-          "unit": "台（車両44千台＋海外生産用部品23千台）",
-          "window": "2018年7月〜9月",
-          "source": "マツダ ニュースリリース 2018-09-21",
-          "source_url": "https://newsroom.mazda.com/ja/publicity/release/2018/201809/180921a.pdf"
-        },
-        {
-          "metric": "mazda_fy2018_global_production_units",
-          "value": 1596767,
-          "unit": "台（2018年1〜12月、国内996,264＋海外600,503）",
-          "window": "2018年通年",
-          "source": "マツダ ニュースリリース 2019-01-30",
-          "source_url": "https://newsroom.mazda.com/ja/publicity/release/2019/201901/190130a.html"
-        },
-        {
-          "metric": "mazda_operating_profit_impact_jpy_oku",
-          "value": -280,
-          "unit": "億円（営業利益、概算）",
-          "window": "2018年度",
-          "source": "マツダ ニュースリリース 2018-09-21",
-          "source_url": "https://newsroom.mazda.com/ja/publicity/release/2018/201809/180921a.pdf"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "mazda_production_loss",
-          "model": "entity_failure(7261, severity=0.042)のマツダ損失率",
-          "observed": "減産67千台 ÷ 年間生産159.7万台 = 4.2%",
-          "comparable": true,
-          "actual_value_pct": 4.2,
-          "predict_from": "firm.seed_mean_loss_pct",
-          "note": "severity（減産率）の直接対応を検証。熊本地震・サイバー攻撃と同じ形式の独立事例。"
-        },
-        {
-          "key": "mazda_profit_impact",
-          "model": "（モデル対象外）",
-          "observed": "営業利益 約280億円の損失",
-          "comparable": false,
-          "note": "エンジンは生産・売上の損失率を表し、営業利益への影響（固定費の吸収等）はモデル化していない。参考値として記録。"
-        }
-      ]
-    },
-    {
-      "event_id": "aisin_fire_1997",
-      "name": "アイシン刈谷第一工場火災（1997年2月1日）",
-      "date": "1997-02-01",
-      "category": "entity_failure",
-      "split": "external",
-      "scenario": "entity_failure",
-      "scenario_params": {
-        "ticker": "7259",
-        "severity": 0.02,
-        "watch_tickers": [
-          "7203"
-        ]
-      },
-      "scenario_input_basis": "Pバルブ（ブレーキフルードプロポーショニングバルブ）をトヨタ車の約80〜90%に供給する専用工場が全焼。協豊会200社以上の代替生産により約5日で供給再開し、トヨタ完成車工場は2月3〜6日停止（2月7日に通常レート復旧）。severityは供給停止期間5日/250日=0.02。当該工場のアイシン全社生産に占める比率は不明のため、停止期間のみに基づく仮定（実際の全社損失率より大きい楽観側の設定）。",
-      "observed": [
-        {
-          "metric": "toyota_production_loss_units",
-          "value": 70000,
-          "unit": "台（輸出用含む）",
-          "window": "1997年2月3〜6日",
-          "source": "西口信勝＝ルロイ・ボーデ 1999（立命館大学DP019）",
-          "source_url": "https://www.ritsumei.ac.jp/acd/re/ssrc/result/dp/dp019.pdf"
-        },
-        {
-          "metric": "toyota_domestic_production_1997_units",
-          "value": 3502046,
-          "unit": "台",
-          "window": "1997年通年",
-          "source": "トヨタ自動車75年史 国内生産台数の推移",
-          "source_url": "https://www.toyota.co.jp/jpn/company/history/75years/data/automotive_business/production/production/japan/production_volume/index.html"
-        },
-        {
-          "metric": "toyota_plant_halt_days",
-          "value": 4,
-          "unit": "日（2月3〜6日、2月7日通常復旧）",
-          "window": "1997年2月",
-          "source": "西口＝ボーデ 1999（立命館大学DP019）",
-          "source_url": "https://www.ritsumei.ac.jp/acd/re/ssrc/result/dp/dp019.pdf"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "toyota_loss",
-          "model": "entity_failure(7259, severity=0.02)のトヨタ損失率（watch）",
-          "observed": "減産約7万台 ≈ 国内生産3,502,046台の2.0%",
-          "comparable": true,
-          "actual_value_pct": 2.0,
-          "predict_from": "firm.watch_losses_pct.7203",
-          "note": "単一部品への供給集中が及ぼす影響を検証。エンジンは産業平均の投入係数と資本関係のみを持ち、部品単位の供給関係を持たない。過小予測が予想される（検証レポートの構造的限界L1と同じ原因）。"
-        }
-      ]
-    },
-    {
-      "event_id": "noto_2024",
-      "name": "能登半島地震（2024年1月1日）",
-      "date": "2024-01-01",
-      "category": "domestic_disaster",
-      "split": "external",
-      "scenario": null,
-      "observed": [
-        {
-          "metric": "jri_gdp_loss_jpy_oku",
-          "value": -974,
-          "unit": "億円（GDP比▲0.02%）",
-          "window": "被災地域のフロー損失",
-          "source": "日本総合研究所 2024-01-23",
-          "source_url": "https://www.jri.co.jp/MediaLibrary/file/report/research/pdf/14753.pdf"
-        },
-        {
-          "metric": "cao_flow_direct_loss_jpy_oku",
-          "value": 1150,
-          "unit": "億円（約900〜1,150億円、石川・富山・新潟3県の2024年1〜3月）",
-          "window": "2024年1〜3月",
-          "source": "内閣府 令和6年能登半島地震の影響試算",
-          "source_url": "https://www5.cao.go.jp/keizai3/discussion-paper/dp241.pdf"
-        },
-        {
-          "metric": "cao_stock_damage_jpy_trillion",
-          "value": 2.6,
-          "unit": "兆円（約1.1〜2.6兆円、住宅・設備等のストック毀損）",
-          "window": "2024年",
-          "source": "内閣府 令和6年能登半島地震の影響試算",
-          "source_url": "https://www5.cao.go.jp/keizai3/r06noto/index.html"
-        }
-      ],
-      "comparisons": [
-        {
-          "key": "regional_shock",
-          "model": "（対象外）",
-          "observed": "GDP損失 ▲0.02%（約974億円）",
-          "comparable": false,
-          "note": "エンジンは国×産業単位のモデルであり、国内の地域（都道府県）単位のショックを入力できない。県レベルの産業連関表を持たないため再現しない。参考として記録。"
-        }
-      ]
+      {
+       "name": "IHS iSuppli: タイ洪水でQ4 HDD生産は四半期比28%減少",
+       "url": "https://www.pcworld.com/article/477848/thai_floods_hit_q4_hard_drive_production_says_research_firm.html"
+      }
+     ]
     }
-  ]
+   ],
+   "observed": [
+    {
+     "metric": "toyota_domestic_production_loss_units",
+     "value": 65000,
+     "unit": "台",
+     "window": "2011-10-10〜11-25",
+     "source": "Reuters",
+     "source_url": "https://www.reuters.com/jp/article/markets/japan/7203t5-idUST9E7MP01B/"
+    },
+    {
+     "metric": "toyota_global_production_loss_units",
+     "value": 215000,
+     "unit": "台",
+     "window": "2011-10-10〜11-25",
+     "source": "Reuters",
+     "source_url": "https://www.reuters.com/jp/article/markets/japan/7203t5-idUST9E7MP01B/"
+    },
+    {
+     "metric": "toyota_fy2011_volume_cut_units",
+     "value": 230000,
+     "unit": "台",
+     "window": "2011年度通期",
+     "source": "Car Watch: トヨタ2011年度見通し下方修正",
+     "source_url": "https://car.watch.impress.co.jp/docs/news/497105.html"
+    },
+    {
+     "metric": "hdd_production_drop_pct",
+     "value": -28,
+     "unit": "%（QoQ）",
+     "window": "2011年Q4",
+     "source": "IHS iSuppli via PCWorld",
+     "source_url": "https://www.pcworld.com/article/477848/thai_floods_hit_q4_hard_drive_production_says_research_firm.html"
+    },
+    {
+     "metric": "toyota_fy2011_op_profit_cut_jpy_oku",
+     "value": -2500,
+     "unit": "億円",
+     "window": "2011年度通期（東日本大震災・タイ洪水・円高合計）",
+     "source": "Car Watch",
+     "source_url": "https://car.watch.impress.co.jp/docs/news/497105.html"
+    },
+    {
+     "metric": "aichi_ip_nov2011_mom_pct",
+     "value": -9.1,
+     "unit": "%（前月比）",
+     "window": "2011年11月",
+     "source": "愛知県: タイ洪水の影響を受けた鉱工業生産指数",
+     "source_url": "https://www.pref.aichi.jp/uploaded/attachment/8229.pdf"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "jpn_c29_loss",
+     "model": "layerA_loss(JPN_C29)（coeff_overrides適用後、イベント期間中）",
+     "observed": "toyota_domestic_production_loss_pct（イベント期間の国内生産の約11%）",
+     "comparable": true,
+     "note": "業種平均（JPN_C29）とトヨタ固有の数値の差（愛知県IP ▲9.1%）は係数の不確実性の範囲として扱う。"
+    }
+   ]
+  },
+  {
+   "event_id": "tohoku_2011",
+   "name": "東日本大震災（2011年3月11日）",
+   "date": "2011-03-11",
+   "category": "supply_shock_domestic",
+   "split": "train",
+   "scenario": "war_blockade",
+   "scenario_params": {
+    "countries": [
+     "JPN"
+    ],
+    "stop_rate": 0.155
+   },
+   "scenario_input_basis": "2011年3月の鉱工業生産指数 前月比▲15.5%（統計開始以来最大の低下、経済産業省）を衝撃入力とする。1ヶ月のショックであるため年率換算は12分の1。",
+   "observed": [
+    {
+     "metric": "japan_ip_2011_03_mom_pct",
+     "value": -15.5,
+     "unit": "%（前月比）",
+     "window": "2011年3月",
+     "source": "経済産業省: 震災が鉱工業生産に及ぼした影響について",
+     "source_url": "https://www.meti.go.jp/statistics/toppage/report/bunseki/pdf/h23/h4a1106j1.pdf"
+    },
+    {
+     "metric": "japan_ip_disaster_area_mom_pct",
+     "value": -32.1,
+     "unit": "%（前月比）",
+     "window": "2011年3月・被災地",
+     "source": "内閣府防災推進・災害リスク管理費等研究会資料",
+     "source_url": "https://www.bousai.go.jp/kyoiku/kigyou/keizoku/keizoku11/kentoukai11_05.pdf"
+    },
+    {
+     "metric": "japan_ip_non_disaster_mom_pct",
+     "value": -13.7,
+     "unit": "%（前月比）",
+     "window": "2011年3月・被災地以外",
+     "source": "同上",
+     "source_url": "https://www.bousai.go.jp/kyoiku/kigyou/keizoku/keizoku11/kentoukai11_05.pdf"
+    },
+    {
+     "metric": "japan_auto_production_mar2011_yoy_pct",
+     "value": -57.3,
+     "unit": "%（前年同月比・四輪車全体）",
+     "window": "2011年3月",
+     "source": "自工会生産統計（立命館大学DP掲載表）",
+     "source_url": "https://www.ritsumei.ac.jp/acd/re/ssrc/result/dp/dp017.pdf"
+    },
+    {
+     "metric": "japan_gdp_growth_impact_pp",
+     "value": -0.47,
+     "unit": "ポイント（震災翌年の実質GDP成長率）",
+     "window": "2011年度",
+     "source": "Carvalho, Nirei, Saito & Tahbaz-Salehi (2021) QJE 136(2)",
+     "source_url": "https://www.kellogg.northwestern.edu/faculty/alirezat/JapanEQ.pdf"
+    },
+    {
+     "metric": "toyota_fy2010_q4_disaster_op_loss_jpy_oku",
+     "value": -1100,
+     "unit": "億円",
+     "window": "2011年1-3月期",
+     "source": "トヨタ2011年3月期決算（webCG記事）",
+     "source_url": "https://www.webcg.net/articles/-/4305"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "propagation_amplification",
+     "model": "JPN全産業伝播後損失 / 直接衝撃(15.5%)",
+     "observed": "Carvalho et al.: 実測GDP影響(-0.47pt)は面積効果のみ(-0.1pt)の4.7倍、リンク切断反実仮説(-0.21pt)の2.2倍",
+     "comparable": true,
+     "note": "エンジンはピーク時の粗損失を計算し復旧はモデル化しないため、年率GDP影響との直接比較は不可。伝播による増幅率のみ比較する。"
+    }
+   ]
+  },
+  {
+   "event_id": "ukraine_2022",
+   "name": "ロシア・ウクライナ戦争に伴うエネルギー価格急騰（2022年）",
+   "date": "2022-02-24",
+   "category": "commodity_price_shock",
+   "split": "train",
+   "scenario": "oil_price",
+   "scenario_params": {
+    "commodity": "lng_japan",
+    "multiplier": 2.04
+   },
+   "scenario_input_basis": "2022年LNG輸入単価は前年比+103.9%（トン当たり約5.7万円→11.7万円、財務省貿易統計）。価格上昇率104%をmultiplier 2.04として入力。",
+   "observed": [
+    {
+     "metric": "tepco_fy2022_recurring_loss_jpy_oku",
+     "value": -2853,
+     "unit": "億円",
+     "window": "2022年度（2022年4月〜2023年3月）",
+     "source": "東京電力 2022年度決算",
+     "source_url": "https://www.tepco.co.jp/press/release/2023/1665289_8713.html"
+    },
+    {
+     "metric": "tepco_fy2022_revenue_jpy_oku",
+     "value": 77986,
+     "unit": "億円",
+     "window": "2022年度",
+     "source": "東京電力 2022年度決算",
+     "source_url": "https://www.tepco.co.jp/about/ir/library/presentation/pdf/230428setsu-j.pdf"
+    },
+    {
+     "metric": "tepco_fy2022_recurring_deterioration_pct",
+     "value": -4.2,
+     "unit": "%（前年比減益3,276億円/売上高）",
+     "window": "2022年度",
+     "source": "東京電力 2022年度決算より算出",
+     "source_url": "https://www.tepco.co.jp/press/release/2023/1665289_8713.html"
+    },
+    {
+     "metric": "japan_cpi_electricity_2022_avg_pct",
+     "value": 20.0,
+     "unit": "%（前年比）",
+     "window": "2022年通年",
+     "source": "総務省: 2022年平均消費者物価指数",
+     "source_url": "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040028295&fileKind=2"
+    },
+    {
+     "metric": "japan_cpi_gas_2022_avg_pct",
+     "value": 18.6,
+     "unit": "%（前年比）",
+     "window": "2022年通年",
+     "source": "総務省: 2022年平均消費者物価指数",
+     "source_url": "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040028295&fileKind=2"
+    },
+    {
+     "metric": "japan_lng_import_value_2022_pct",
+     "value": 97.5,
+     "unit": "%（前年比）",
+     "window": "2022年通年",
+     "source": "ガスエネニュース（貿易統計に基づく）",
+     "source_url": "https://www.gas-enenews.co.jp/lpgas-lng/608/"
+    },
+    {
+     "metric": "japan_terms_of_trade_loss_2022q3",
+     "value": 19.0,
+     "unit": "兆円（四半期の所得流出）",
+     "window": "2022年7-9月期",
+     "source": "内閣府: 日本経済2022-2023",
+     "source_url": "https://www5.cao.go.jp/keizai3/2022/0203nk/pdf/n22_1.pdf"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "tepco_margin_loss",
+     "model": "layerA_loss(JPN_D)（LNG×2.04）",
+     "observed": "tepco_fy2022_recurring_deterioration_pct = -4.2%",
+     "comparable": true,
+     "note": "電気料金への転嫁（規制・燃料費調整制度）と政府支援により実際の損失はコスト増より大幅に小さい。モデルのpass_through（マージン圧迫率）をこの観測で較正する。"
+    },
+    {
+     "key": "cpi_pass_through",
+     "model": "pass_throughから導かれる価格転嫁率 1-pass_through",
+     "observed": "japan_cpi_electricity_2022_avg_pct = +20.0%（LNG輸入単価+103.9%に対し）",
+     "comparable": true,
+     "note": "観測された価格転嫁率は約19%。ただし燃料費調整制度の遅延・政府支援の影響を含む。"
+    }
+   ]
+  },
+  {
+   "event_id": "covid_2020",
+   "name": "COVID-19初動パンデミック（2020年）",
+   "date": "2020-04-01",
+   "category": "global_demand_and_supply_shock",
+   "split": "train",
+   "scenario": "war_blockade",
+   "scenario_params": {
+    "countries": "ALL",
+    "stop_rate": 0.048
+   },
+   "scenario_input_basis": "2020年の日本の実質GDP成長率 -4.8%（内閣府ESRI）を年間平均の生産・需要低下として入力。全ての国・産業に一様に適用。",
+   "observed": [
+    {
+     "metric": "japan_real_gdp_2020_pct",
+     "value": -4.8,
+     "unit": "%（前年比）",
+     "window": "2020年暦年",
+     "source": "内閣府ESRI GDP速報",
+     "source_url": "https://www.esri.cao.go.jp/jp/sna/data/data_list/sokuhou/files/2020/qe204/pdf/qepoint2041.pdf"
+    },
+    {
+     "metric": "japan_auto_production_2020_pct",
+     "value": -16.3,
+     "unit": "%（前年比・乗用車メーカー8社国内生産）",
+     "window": "2020年暦年",
+     "source": "日本自動車工業会",
+     "source_url": "https://www.aba-j.or.jp/info/industry/14479/"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "japan_gdp",
+     "model": "JPN全産業伝播後損失（年間平均）",
+     "observed": "japan_real_gdp_2020_pct = -4.8%",
+     "comparable": true,
+     "note": "一様ショックのため業種間の不均一性（自動車-16.3%等）は再現しない。"
+    }
+   ]
+  },
+  {
+   "event_id": "sea_chip_shortage_2021",
+   "name": "半導体・東南アジア部品不足（2021年5-10月）",
+   "date": "2021-09-19",
+   "category": "supply_shock_foreign",
+   "split": "holdout",
+   "scenario": "war_blockade",
+   "scenario_params": {
+    "countries": [
+     "MYS",
+     "VNM",
+     "THA"
+    ],
+    "stop_rate": 0.3
+   },
+   "scenario_input_basis": "マレーシア・ベトナム等のCOVID感染拡大による部品工場稼働低下とルネサス那珂工場火災（2021年3月）が重なり世界的な半導体不足が発生。トヨタは2021年9月の世界生産計画を約90万台→約54万台に引き下げた。stop_rate=0.3は概算。",
+   "coeff_overrides": [
+    {
+     "buyer_ci": "JPN_C29",
+     "seller_ci": "MYS_C26",
+     "effective_input_share": 0.22,
+     "basis": "タイ洪水（train）で較正したJPN_C29←C26系の実効依存度22%をそのまま転用する（ホールドアウト検証）。",
+     "sources": [
+      {
+       "name": "トヨタ: 2021年9月・10月の生産計画見直しについて",
+       "url": "https://global.toyota/jp/newsroom/corporate/36003625.html"
+      },
+      {
+       "name": "BBC: トヨタ9月世界生産4割減（約36万台減）",
+       "url": "https://www.bbc.com/japanese/58277673.amp"
+      }
+     ]
+    }
+   ],
+   "observed": [
+    {
+     "metric": "toyota_sept2021_global_production_cut_units",
+     "value": -360000,
+     "unit": "台",
+     "window": "2021年9月",
+     "source": "BBC（トヨタ発表に基づく）",
+     "source_url": "https://www.bbc.com/japanese/58277673.amp"
+    },
+    {
+     "metric": "toyota_sept2021_global_production_cut_pct",
+     "value": -40,
+     "unit": "%（計画比）",
+     "window": "2021年9月",
+     "source": "トヨタ: 2021年9月ならびに10月の生産計画見直しについて",
+     "source_url": "https://global.toyota/jp/newsroom/corporate/36003625.html"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "jpn_c29_loss",
+     "model": "layerA_loss(JPN_C29)（coeff_overrides転用）",
+     "observed": "toyota_sept2021_global_production_cut_pct = -40%（月次）",
+     "comparable": true,
+     "note": "タイ洪水で較正した実効依存度が別イベントに転用できるかを検証する（ホールドアウト）。"
+    }
+   ]
+  },
+  {
+   "event_id": "suez_2021",
+   "name": "スエズ運河閉塞（Ever Given座礁、2021年3月23-29日）",
+   "date": "2021-03-23",
+   "category": "chokepoint",
+   "split": "holdout",
+   "scenario": "chokepoint",
+   "scenario_params": {
+    "route_id": "suez",
+    "severity": 0.0164
+   },
+   "scenario_input_basis": "6日間の閉塞。年間輸送量に対する期間比 severity = 6/365 = 0.0164。",
+   "observed": [
+    {
+     "metric": "trade_held_up_usd_per_day",
+     "value": 9.6,
+     "unit": "十億ドル/日",
+     "window": "閉塞中",
+     "source": "Lloyd's List（BBC報道）",
+     "source_url": "https://www.bbc.com/news/business-56559073"
+    },
+    {
+     "metric": "global_trade_loss_usd_per_week",
+     "value": 8.0,
+     "unit": "十億ドル/週（6-10の中央値）",
+     "window": "閉塞中",
+     "source": "Allianz試算（Reuters）",
+     "source_url": "https://www.reuters.com/article/egypt-suezcanal-ship-costs/suez-canal-blockage-could-cost-6-bln-to-10-bln-in-lost-trade-allianz-idUSL8N2LO4B1"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "japan_trade_impact",
+     "model": "JPN全産業のLayer A損失（年率換算×6/365）",
+     "observed": "Allianz: 世界的には6-10十億ドル/週。日本固有の金額は信頼できる推計がなく比較不能",
+     "comparable": false,
+     "note": "6日間の遅延は在庫と迂回で大部分が吸収され、日本の月次生産指数への検出可能な影響は無かった。エンジンも微小な損失を出すことを確認する（数量整合性の下限検証）。"
+    }
+   ]
+  },
+  {
+   "event_id": "red_sea_2024",
+   "name": "紅海危機（フーシ派攻撃による迂回、2023年12月〜2024年）",
+   "date": "2023-12-15",
+   "category": "chokepoint",
+   "split": "holdout",
+   "scenario": "chokepoint",
+   "scenario_params": {
+    "route_id": "suez",
+    "severity": 0.42
+   },
+   "scenario_input_basis": "UNCTAD: スエズ運河通航量はピーク比42%減少。severity=0.42。",
+   "observed": [
+    {
+     "metric": "drewry_wci_increase_pct",
+     "value": 170,
+     "unit": "%（2024年、平時比）",
+     "window": "2024年半ばピーク",
+     "source": "World Bank: The Far-Reaching Impact of the Red Sea Shipping Crisis",
+     "source_url": "https://openknowledge.worldbank.org/server/api/core/bitstreams/5596cfd9-821a-47db-939f-ed485cbaea48/content"
+    },
+    {
+     "metric": "suez_transits_decline_pct",
+     "value": -42,
+     "unit": "%（ピーク比）",
+     "window": "2024年",
+     "source": "UNCTAD",
+     "source_url": "https://unctad.org/news/unprecedented-shipping-disruptions-raise-risk-global-trade-unctad-warns"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "shipping_rates",
+     "model": "chokepointチャネルの代替経路コスト増",
+     "observed": "drewry_wci_increase_pct = +170%",
+     "comparable": false,
+     "note": "エンジンは数量障害（輸送シェア×severity）をモデル化し運賃（価格）はモデル化しない。価格対応は範囲外として文書化する。"
+    }
+   ]
+  },
+  {
+   "event_id": "toyota_cyber_2022",
+   "name": "トヨタ仕入先サイバー攻撃による国内全工場停止（2022年3月1日）",
+   "date": "2022-03-01",
+   "category": "cyber_supply_shock",
+   "split": "holdout",
+   "scenario": "entity_failure",
+   "scenario_params": {
+    "ticker": "7203",
+    "severity": 0.004
+   },
+   "scenario_input_basis": "小島プレス工業のシステム障害（サイバー攻撃とみられる）により、トヨタは国内全14工場28ラインを1日停止。severity = 1日/年間稼働日250日 = 0.004。",
+   "observed": [
+    {
+     "metric": "toyota_production_impact_units",
+     "value": 13000,
+     "unit": "台",
+     "window": "2022年3月1日",
+     "source": "Reuters（Newsweek Japan）",
+     "source_url": "https://www.newsweekjapan.jp/headlines/business/2022/02/374016.php"
+    },
+    {
+     "metric": "toyota_daily_domestic_production_units",
+     "value": 13000,
+     "unit": "台/日（国内生産ペース）",
+     "window": "2022年",
+     "source": "東洋経済",
+     "source_url": "https://toyokeizai.net/articles/-/577232?display=b"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "toyota_loss",
+     "model": "entity_failure(7203, severity=0.004)のトヨタ損失率",
+     "observed": "1日分の生産 ≈ 年間生産の0.4%",
+     "comparable": true,
+     "note": "severity（期間×稼働率）の直接対応を検証。伝播（子会社・他社への波及）はタイとダイハツも停止したことが観測と整合する。"
+    }
+   ]
+  },
+  {
+   "event_id": "kumamoto_2016",
+   "name": "熊本地震（2016年4月14-16日）",
+   "date": "2016-04-14",
+   "category": "domestic_disaster",
+   "split": "holdout",
+   "scenario": "entity_failure",
+   "scenario_params": {
+    "ticker": "7203",
+    "severity": 0.0154
+   },
+   "scenario_input_basis": "トヨタは部品供給途絶により、4月18-23日に国内の完成車工場を段階的に停止（20-23日は全量産ライン停止）。全体で約5万台減産。severity = 50,000台 ÷ (13,000台/日 × 250日) ≈ 0.0154。",
+   "observed": [
+    {
+     "metric": "toyota_production_impact_units",
+     "value": 50000,
+     "unit": "台",
+     "window": "2016年4月18-23日",
+     "source": "トヨタ発表（日経報道・東北大学IRIDeS資料）",
+     "source_url": "https://irides.tohoku.ac.jp/media/files/earthquake/eq/20160520_kumamotoeq_bcp_maruya.pdf"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "toyota_loss",
+     "model": "entity_failure(7203, severity=0.0154)のトヨタ損失率",
+     "observed": "約5万台 ≈ 年間国内生産の1.5%",
+     "comparable": true,
+     "note": "severityの直接対応を検証。"
+    }
+   ]
+  },
+  {
+   "event_id": "renesas_fire_2021",
+   "name": "ルネサス那珂工場火災（2021年3月19日）",
+   "date": "2021-03-19",
+   "category": "entity_failure",
+   "split": "holdout",
+   "scenario": "entity_failure",
+   "scenario_params": {
+    "ticker": "6723",
+    "severity": 0.09,
+    "watch_tickers": [
+     "7203"
+    ]
+   },
+   "scenario_input_basis": "那珂工場300mmライン（月商約170億円、全社売上の3割弱）が約1ヶ月停止し代替生産で段階回復。Q2（4-6月期）の売上減少見込み170億円 ≈ 四半期収益の9%。severity=0.09。",
+   "observed": [
+    {
+     "metric": "renesas_q2_revenue_impact_jpy_oku",
+     "value": -170,
+     "unit": "億円",
+     "window": "2021年4-6月期",
+     "source": "Reuters Japan",
+     "source_url": "https://jp.reuters.com/article/renesas-resilts-idJPKBN2CF0P9"
+    },
+    {
+     "metric": "renesas_q2_op_impact_jpy_oku",
+     "value": -140,
+     "unit": "億円（Non-GAAP営業損益）",
+     "window": "2021年4-6月期",
+     "source": "EE Times Japan",
+     "source_url": "https://eetimes.itmedia.co.jp/ee/articles/2104/28/news137.html"
+    },
+    {
+     "metric": "toyota_production_cut_units",
+     "value": 20000,
+     "unit": "台（国内2工場・3ライン計16日間の一時停止）",
+     "window": "2021年6月",
+     "source": "東洋経済 四季報オンライン（2021年6月18日トヨタ発表）",
+     "source_url": "https://shikiho.toyokeizai.net/news/0/429250"
+    },
+    {
+     "metric": "toyota_domestic_production_fy2021_units",
+     "value": 2760843,
+     "unit": "台（2021年度・トヨタ単体）",
+     "window": "2021年度（2021年4月〜2022年3月）",
+     "source": "トヨタ自動車 販売・生産・輸出実績 2021年度",
+     "source_url": "https://global.toyota/jp/company/profile/production-sales-figures/202203.html"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "renesas_loss",
+     "model": "entity_failure(6723, severity=0.09)のルネサス損失率",
+     "observed": "四半期売上の約9%",
+     "comparable": true,
+     "note": "severityの直接対応を検証。"
+    },
+    {
+     "key": "toyota_loss",
+     "model": "entity_failure(6723, severity=0.09)のトヨタ損失率（watch）",
+     "observed": "半導体不足（ルネサス火災が悪化要因）による2021年6月の国内2工場停止 約2万台 ≈ 2021年度国内生産2,760,843台の0.7%",
+     "comparable": true,
+     "actual_value_pct": 0.7,
+     "predict_from": "firm.watch_losses_pct.7203",
+     "note": "供給網メカニズムの独立検証。ただしルネサスの有報の主要販売先は半導体商社（WT Microelectronics・萩原エレクトロニクス）であり、F_jp企業との観測エッジが存在しないため、トヨタへの伝播はほぼ0%になることが予想される（開示ベース供給網のカバレッジ限界）。実際の影響も半導体不足全体（COVID需要・テキサス寒波等を含む）の一部であり、ルネサス火災のみへの帰属は分離不能。"
+    }
+   ]
+  },
+  {
+   "event_id": "maersk_notpetya_2017",
+   "name": "NotPetyaランサムウェア（A.P. モラー・マースク、2017年6月）",
+   "date": "2017-06-27",
+   "category": "cyber",
+   "split": "reference",
+   "scenario": null,
+   "scenario_params": {},
+   "observed": [
+    {
+     "metric": "maersk_loss_usd_million",
+     "value": 300,
+     "unit": "百万ドル（上限推計）",
+     "window": "2017年",
+     "source": "Maersk決算説明（The Register / CNBC報道）",
+     "source_url": "https://www.theregister.com/security/2017/08/16/notpetya-ransomware-attack-cost-us-300m-shipping-giant-maersk/1343911"
+    }
+   ],
+   "comparisons": [],
+   "comparability_note": "マースクはデンマーク企業であり日本上場企業データベースに含まれないためエンジンで再現できない。観測値のみ記録。"
+  },
+  {
+   "event_id": "ms_cyber_2025",
+   "name": "M&Sサイバー攻撃（2025年4月〜）",
+   "date": "2025-04-25",
+   "category": "cyber",
+   "split": "reference",
+   "scenario": null,
+   "scenario_params": {},
+   "observed": [
+    {
+     "metric": "ms_operating_profit_impact_gbp_million",
+     "value": -300,
+     "unit": "百万ポンド（運営利益影響の初期推計）",
+     "window": "2025年度",
+     "source": "Reuters",
+     "source_url": "https://www.reuters.com/business/media-telecom/britains-ms-says-cyberattack-cost-400-million-2025-05-21/"
+    },
+    {
+     "metric": "ms_actual_costs_gbp_million",
+     "value": 136,
+     "unit": "百万ポンド（後判明した実費用）",
+     "window": "2025年度",
+     "source": "The Register",
+     "source_url": "https://www.theregister.com/security/2025/11/05/ms-pegs-cyber-cleanup-costs-at-136m-profits-tumble/325250"
+    }
+   ],
+   "comparisons": [],
+   "comparability_note": "M&Sは英国企業であり日本上場企業データベースに含まれない。観測値のみ記録（初期推計と実額の乖離に注意: サイバー事象の影響額推計は2倍以上変動し得る）。"
+  },
+  {
+   "event_id": "fy2021_fuel_surge",
+   "name": "FY2021燃料費高騰（2021年度、ウクライナ危機前）",
+   "date": "2021-04-01",
+   "category": "commodity_price_shock",
+   "split": "external",
+   "scenario": "oil_price",
+   "scenario_params": {
+    "commodity": "lng_japan",
+    "multiplier": 1.607
+   },
+   "scenario_input_basis": "2021年度のLNG輸入CIF価格は前年度比+60.7%（389→626 US$/トン、IEEJ『2021年度エネルギー需給実績（速報）』）。multiplier 1.607として入力。較正に使用したFY2022（+103.9%）とは別年度の独立事例。",
+   "observed": [
+    {
+     "metric": "tepco_fy2021_recurring_profit_jpy_oku",
+     "value": 449,
+     "unit": "億円",
+     "window": "2021年度（2021年4月〜2022年3月）",
+     "source": "東京電力 2021年度決算",
+     "source_url": "https://www.tepco.co.jp/press/release/2022/1662710_8712.html"
+    },
+    {
+     "metric": "tepco_fy2020_recurring_profit_jpy_oku",
+     "value": 1898,
+     "unit": "億円",
+     "window": "2020年度",
+     "source": "東京電力 2021年度決算（前年比較）",
+     "source_url": "https://www.tepco.co.jp/press/release/2022/1662710_8712.html"
+    },
+    {
+     "metric": "tepco_fy2021_revenue_jpy_oku",
+     "value": 53099,
+     "unit": "億円",
+     "window": "2021年度",
+     "source": "東京電力 2021年度決算（FNN報道）",
+     "source_url": "https://www.fnn.jp/articles/-/353950"
+    },
+    {
+     "metric": "tepco_fy2021_recurring_deterioration_pct",
+     "value": -2.73,
+     "unit": "%（前年比減益1,449億円/売上高5兆3,099億円）",
+     "window": "2021年度",
+     "source": "東京電力 2021年度決算より算出",
+     "source_url": "https://www.tepco.co.jp/press/release/2022/1662710_8712.html"
+    },
+    {
+     "metric": "japan_lng_cif_price_fy2021_pct",
+     "value": 60.7,
+     "unit": "%（前年度比、389→626 US$/トン）",
+     "window": "2021年度",
+     "source": "IEEJ 2021年度エネルギー需給実績（速報）",
+     "source_url": "https://eneken.ieej.or.jp/data/10787.pdf"
+    },
+    {
+     "metric": "tepco_fy2021_recurring_change_pct",
+     "value": -76.3,
+     "unit": "%（前年比）",
+     "window": "2021年度",
+     "source": "東京電力 2021年度決算",
+     "source_url": "https://www.tepco.co.jp/press/release/2022/1662710_8712.html"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "tepco_margin_loss",
+     "model": "layerA_loss(JPN_D)（LNG×1.607）",
+     "observed": "tepco_fy2021_recurring_deterioration_pct = -2.73%",
+     "comparable": true,
+     "actual_value_pct": 2.73,
+     "predict_from": "layerA.jpn_d_loss_pct",
+     "note": "FY2021は小売電力量減少（売上高▲9.5%）もあり燃料費以外の要因を含む。減益の主因はJERAの燃料費調整制度の期ずれ影響（規制のため価格転嫁が遅延）で、pass_through=0.05の較正値と整合する方向。パラメータ調整は行っていない。"
+    }
+   ]
+  },
+  {
+   "event_id": "westrain_2018_mazda",
+   "name": "西日本豪雨によるマツダ生産停止（2018年7月）",
+   "date": "2018-07-06",
+   "category": "domestic_disaster",
+   "split": "external",
+   "scenario": "entity_failure",
+   "scenario_params": {
+    "ticker": "7261",
+    "severity": 0.042
+   },
+   "scenario_input_basis": "平成30年7月豪雨でマツダは広島の本社工場（宇品第1・第2）・防府工場を停止・減産し、9月10日に通常操業へ復旧。当初計画比の減産は車両44千台＋海外生産用部品23千台＝67千台。2018年（1〜12月）の全世界生産1,596,767台に対する比率4.2%をseverityとした。",
+   "observed": [
+    {
+     "metric": "mazda_production_loss_units",
+     "value": 67000,
+     "unit": "台（車両44千台＋海外生産用部品23千台）",
+     "window": "2018年7月〜9月",
+     "source": "マツダ ニュースリリース 2018-09-21",
+     "source_url": "https://newsroom.mazda.com/ja/publicity/release/2018/201809/180921a.pdf"
+    },
+    {
+     "metric": "mazda_fy2018_global_production_units",
+     "value": 1596767,
+     "unit": "台（2018年1〜12月、国内996,264＋海外600,503）",
+     "window": "2018年通年",
+     "source": "マツダ ニュースリリース 2019-01-30",
+     "source_url": "https://newsroom.mazda.com/ja/publicity/release/2019/201901/190130a.html"
+    },
+    {
+     "metric": "mazda_operating_profit_impact_jpy_oku",
+     "value": -280,
+     "unit": "億円（営業利益、概算）",
+     "window": "2018年度",
+     "source": "マツダ ニュースリリース 2018-09-21",
+     "source_url": "https://newsroom.mazda.com/ja/publicity/release/2018/201809/180921a.pdf"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "mazda_production_loss",
+     "model": "entity_failure(7261, severity=0.042)のマツダ損失率",
+     "observed": "減産67千台 ÷ 年間生産159.7万台 = 4.2%",
+     "comparable": true,
+     "actual_value_pct": 4.2,
+     "predict_from": "firm.seed_mean_loss_pct",
+     "note": "severity（減産率）の直接対応を検証。熊本地震・サイバー攻撃と同じ形式の独立事例。"
+    },
+    {
+     "key": "mazda_profit_impact",
+     "model": "（モデル対象外）",
+     "observed": "営業利益 約280億円の損失",
+     "comparable": false,
+     "note": "エンジンは生産・売上の損失率を表し、営業利益への影響（固定費の吸収等）はモデル化していない。参考値として記録。"
+    }
+   ]
+  },
+  {
+   "event_id": "aisin_fire_1997",
+   "name": "アイシン刈谷第一工場火災（1997年2月1日）",
+   "date": "1997-02-01",
+   "category": "entity_failure",
+   "split": "external",
+   "scenario": "entity_failure",
+   "scenario_params": {
+    "ticker": "7259",
+    "severity": 0.02,
+    "watch_tickers": [
+     "7203"
+    ]
+   },
+   "scenario_input_basis": "Pバルブ（ブレーキフルードプロポーショニングバルブ）をトヨタ車の約80〜90%に供給する専用工場が全焼。協豊会200社以上の代替生産により約5日で供給再開し、トヨタ完成車工場は2月3〜6日停止（2月7日に通常レート復旧）。severityは供給停止期間5日/250日=0.02。当該工場のアイシン全社生産に占める比率は不明のため、停止期間のみに基づく仮定（実際の全社損失率より大きい楽観側の設定）。",
+   "observed": [
+    {
+     "metric": "toyota_production_loss_units",
+     "value": 70000,
+     "unit": "台（輸出用含む）",
+     "window": "1997年2月3〜6日",
+     "source": "西口信勝＝ルロイ・ボーデ 1999（立命館大学DP019）",
+     "source_url": "https://www.ritsumei.ac.jp/acd/re/ssrc/result/dp/dp019.pdf"
+    },
+    {
+     "metric": "toyota_domestic_production_1997_units",
+     "value": 3502046,
+     "unit": "台",
+     "window": "1997年通年",
+     "source": "トヨタ自動車75年史 国内生産台数の推移",
+     "source_url": "https://www.toyota.co.jp/jpn/company/history/75years/data/automotive_business/production/production/japan/production_volume/index.html"
+    },
+    {
+     "metric": "toyota_plant_halt_days",
+     "value": 4,
+     "unit": "日（2月3〜6日、2月7日通常復旧）",
+     "window": "1997年2月",
+     "source": "西口＝ボーデ 1999（立命館大学DP019）",
+     "source_url": "https://www.ritsumei.ac.jp/acd/re/ssrc/result/dp/dp019.pdf"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "toyota_loss",
+     "model": "entity_failure(7259, severity=0.02)のトヨタ損失率（watch）",
+     "observed": "減産約7万台 ≈ 国内生産3,502,046台の2.0%",
+     "comparable": true,
+     "actual_value_pct": 2.0,
+     "predict_from": "firm.watch_losses_pct.7203",
+     "note": "単一部品への供給集中が及ぼす影響を検証。v2.2で有価証券報告書の「主要な販売先」開示から構築した供給網エッジ（アイシン→トヨタ cost_share=3.65%、伝播係数=min(1, cost_share×SUPPLY_GATE=10)=0.365）により伝播する。実測の2.0%には達しない見込み（アイシンのトヨタ向け販売がトヨタCOGS比3.65%に希釈されるため。実際の事件はPバルブという単一部品の単一供給（トヨタ車の80〜90%）によるもので、企業単位の開示では捉えきれない部分集中）。"
+    }
+   ]
+  },
+  {
+   "event_id": "noto_2024",
+   "name": "能登半島地震（2024年1月1日）",
+   "date": "2024-01-01",
+   "category": "domestic_disaster",
+   "split": "external",
+   "scenario": null,
+   "observed": [
+    {
+     "metric": "jri_gdp_loss_jpy_oku",
+     "value": -974,
+     "unit": "億円（GDP比▲0.02%）",
+     "window": "被災地域のフロー損失",
+     "source": "日本総合研究所 2024-01-23",
+     "source_url": "https://www.jri.co.jp/MediaLibrary/file/report/research/pdf/14753.pdf"
+    },
+    {
+     "metric": "cao_flow_direct_loss_jpy_oku",
+     "value": 1150,
+     "unit": "億円（約900〜1,150億円、石川・富山・新潟3県の2024年1〜3月）",
+     "window": "2024年1〜3月",
+     "source": "内閣府 令和6年能登半島地震の影響試算",
+     "source_url": "https://www5.cao.go.jp/keizai3/discussion-paper/dp241.pdf"
+    },
+    {
+     "metric": "cao_stock_damage_jpy_trillion",
+     "value": 2.6,
+     "unit": "兆円（約1.1〜2.6兆円、住宅・設備等のストック毀損）",
+     "window": "2024年",
+     "source": "内閣府 令和6年能登半島地震の影響試算",
+     "source_url": "https://www5.cao.go.jp/keizai3/r06noto/index.html"
+    }
+   ],
+   "comparisons": [
+    {
+     "key": "regional_shock",
+     "model": "（対象外）",
+     "observed": "GDP損失 ▲0.02%（約974億円）",
+     "comparable": false,
+     "note": "エンジンは国×産業単位のモデルであり、国内の地域（都道府県）単位のショックを入力できない。県レベルの産業連関表を持たないため再現しない。参考として記録。"
+    }
+   ]
+  }
+ ]
 }

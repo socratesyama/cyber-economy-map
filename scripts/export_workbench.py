@@ -188,16 +188,22 @@ def main() -> None:
             "tier1FinancialRecordCount": fcounts.get(r["company_id"], 0),
         })
     hashes["companies.json"] = dump_json(OUT / "companies.json", companies)
-    rels = [dict(r) for r in conn.execute("""SELECT edge_id,src_id,dst_id,relation_type,share_pct,
+    all_rels = [dict(r) for r in conn.execute("""SELECT edge_id,src_id,dst_id,relation_type,share_pct,
                 dependency_status,as_of,source_tier,source_ref,extraction,confidence
                 FROM relation WHERE src_id IN (SELECT company_id FROM company WHERE layer IN ('F_jp','F_border'))
                 AND dst_id IN (SELECT company_id FROM company WHERE layer IN ('F_jp','F_border'))
                 ORDER BY edge_id""")]
+    # The archived mesh is ownership-only; supply edges are a separate channel and
+    # are never re-labeled as sales/procurement evidence in the mesh layout.
+    ownership_rels = [r for r in all_rels if r["relation_type"] == "ownership_parent_of"]
+    supply_rels = [r for r in all_rels if r["relation_type"] != "ownership_parent_of"]
     layout_count, hashes["ownership-layout.json"], ownership_mesh_counts = export_ownership_layout(
-        {company["id"] for company in companies}, rels
+        {company["id"] for company in companies}, ownership_rels
     )
     # Ownership is observable; it is never re-labeled as a sales or procurement edge.
-    hashes["ownership.json"] = dump_json(OUT / "ownership.json", rels)
+    # Supply-network edges are exported separately with their own provenance fields.
+    hashes["ownership.json"] = dump_json(OUT / "ownership.json", ownership_rels)
+    hashes["supply-edges.json"] = dump_json(OUT / "supply-edges.json", supply_rels)
 
     with np.load(ICIO, allow_pickle=False) as source:
         sellers = source["sellers"].astype(str)
@@ -259,7 +265,8 @@ def main() -> None:
             "countryAggregation": "Within each sensitivity draw, the unweighted arithmetic mean across represented affected production sectors; not a monetary or GDP loss estimate.",
         },
         "counts": {
-            "japanListedCompanies": len(companies), "ownershipRelationships": len(rels),
+            "japanListedCompanies": len(companies), "ownershipRelationships": len(ownership_rels),
+            "supplyNetworkEdges": len(supply_rels),
             "ownershipLayoutNodes": layout_count,
             **ownership_mesh_counts,
             "relationshipsByStatus": relation_by_status, "ioNodes": len(production_names),
