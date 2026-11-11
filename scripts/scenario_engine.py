@@ -34,7 +34,28 @@ DB = BASE / "db" / "cybermap.sqlite"
 NPZ = BASE / "data" / "icio2020_coeff.npz"
 ICIO_CSV = BASE / "raw" / "icio" / "2020_SML.csv"
 VIZ_SCENARIOS = BASE / "viz" / "data" / "scenarios.json"
+CALIBRATED_PARAMS = BASE / "analysis" / "calibrated_params.json"
 today = datetime.date.today().isoformat()
+
+
+def _load_calibrated_params():
+    """較正済みパラメータ（docs/validation-report.md 参照）を読み込む。
+    ファイルが無い場合は旧規定値（PASS_THROUGH=0.5, PROP_DAMP=0.4）を用いる。"""
+    defaults = {"pass_through": 0.5, "prop_damp": 0.4}
+    try:
+        with open(CALIBRATED_PARAMS, encoding="utf-8") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return defaults
+    out = dict(defaults)
+    for k in ("pass_through", "prop_damp"):
+        v = data.get(k)
+        if isinstance(v, (int, float)):
+            out[k] = float(v)
+    return out
+
+
+_CAL = _load_calibrated_params()
 
 # ---------- 17業種(JPX) → ICIO 産業コード ----------
 SECTOR2CI = {
@@ -45,8 +66,13 @@ SECTOR2CI = {
     "電機・精密": "C27", "自動車・輸送機": "C29", "電力・ガス": "D", "銀行": "K",
 }
 ENERGY_CIS = ("D", "C19", "B05_06", "B07_08", "B09")   # エネルギー供給源とみなすLayer Aノード
-PASS_THROUGH = 0.5   # 価格上昇のコスト転嫁率（残りはマージン圧迫）
-PROP_DAMP = 0.4      # Layer A伝播の減衰係数（代替調達・在庫・価格調整を表す）
+# pass_through: 価格上昇のうち企業損失（マージン圧迫）になる割合。
+#   2022年エネルギー危機の東京電力FY2022実績（経常損益 前年比▲3,276億円 / 売上高7兆7,986億円 ≈ 4.2%、
+#   LNG輸入単価 +103.9%）から較正。詳細は docs/validation-report.md。
+PASS_THROUGH = _CAL["pass_through"]
+# prop_damp: Layer A伝播の減衰係数（代替調達・在庫・価格調整を表す）。
+#   2011年タイ洪水の日本の自動車生産への波及（実測 約9〜11%）から較正。
+PROP_DAMP = _CAL["prop_damp"]
 
 
 class Engine:
@@ -179,10 +205,13 @@ class Engine:
             self.exp_share[name] = {c: v / tot for c, v in ctry_sum.items() if v / tot > 0.0002}
 
     # ---------- チャネル変換（ベクトル） ----------
-    def shock_entity_failure(self, seed_id):
+    def shock_entity_failure(self, seed_id, severity=1.0):
+        """seed企業の生産停止。severity = 損失率（停止日数/年間稼働日数 × 稼働停止率）。
+        例: 1日全停止 ≈ 1/250 ≈ 0.004、4日全停止 ≈ 0.016。
+        severity=1.0（既定）は恒久的な全生産停止を意味し、実際の事件では過大な仮定になる。"""
         v = np.zeros(len(self.ci_names))
         f = np.zeros(len(self.firm_ids))
-        f[self.firm_idx[seed_id]] = 1.0
+        f[self.firm_idx[seed_id]] = min(1.0, float(severity))
         return f, v
 
     def shock_war_blockade(self, countries, stop_rate):
@@ -312,13 +341,18 @@ class Engine:
         return mean, std, affected / np.maximum(counts, 1)
 
     def _perturb(self, kw, rng):
+        """パラメータ摂動。確率・比率は対数正規（平均保存）で摂動する。
+
+        旧実装の betavariate(v*10, (1-v)*10) は v が小さい（severity<0.1 等）と
+        U字形分布になり「ほぼ全損」を稀にサンプリングする問題があったため、
+        どの値域でも平均を保存し極端な裾を出さない対数正規摂動に置き換えた。"""
+        import math
         kw2 = dict(kw)
-        if "stop_rate" in kw2:
-            sr = min(0.99, max(0.01, kw["stop_rate"]))
-            kw2["stop_rate"] = rng.betavariate(sr * 10, (1 - sr) * 10)
-        if "severity" in kw2:
-            sv = min(0.99, max(0.01, kw["severity"]))
-            kw2["severity"] = rng.betavariate(sv * 10, (1 - sv) * 10)
+        for key in ("stop_rate", "severity"):
+            if key in kw2:
+                v = min(0.99, max(0.001, kw[key]))
+                # 平均保存の対数正規摂動（σ=0.25）
+                kw2[key] = min(1.0, v * math.exp(rng.gauss(0.0, 0.25) - 0.03125))
         if "multiplier" in kw2:
             kw2["multiplier"] = max(1.0, kw["multiplier"] * rng.gauss(1.0, 0.1))
         return kw2
@@ -441,7 +475,7 @@ def main():
         if not args.ticker: ap.error("--ticker required")
         r = eng.con.execute("SELECT company_id FROM id_map WHERE id_type='ticker' AND id_value=?", (args.ticker,)).fetchone()
         if not r: sys.exit("ticker not found")
-        kw = dict(seed_id=r["company_id"])
+        kw = dict(seed_id=r["company_id"], severity=args.severity)
     elif args.scenario == "war_blockade":
         if not args.countries: ap.error("--countries required (comma ISO3, 例: TWN or CHN)")
         kw = dict(countries=args.countries.split(","), stop_rate=args.stop_rate)

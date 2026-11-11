@@ -1,8 +1,36 @@
 {
-  "chokepoint_mitigation_factor": 0.5,
-  "chokepoint_shipping_elasticity": 1.666666666666667,
-  "entity_production_share_factor": 0.3999680025597952,
-  "entity_price_elasticity": 1.5749999999999997,
-  "commodity_cpi_pass_through": 2.0,
-  "commodity_gdp_multiplier": 0.09259259259259259
+  "version": "2.0",
+  "calibrated_date": "2026-11-11",
+  "pass_through": 0.05,
+  "prop_damp": 0.6,
+  "defaults": {
+    "pass_through": 0.5,
+    "prop_damp": 0.4
+  },
+  "provenance": {
+    "pass_through": {
+      "meaning": "コスト上昇のうち企業損失（マージン圧迫・未回収コスト）になる割合。残りは価格転嫁される。",
+      "fitted_on": ["ukraine_2022"],
+      "method": "LNG輸入単価+103.9%（2022年、財務省貿易統計）に対する東京電力FY2022の経常損益悪化率（▲3,276億円/売上高7兆7,986億円 ≈ 4.2%）から逆算: pt = 0.042 / (energy_int(JPN_D)=0.61 × 1.04) ≈ 0.066。伝播ラウンド込みの整合で0.05。旧規定値0.5は約10倍過大。",
+      "uncertainty": "0.03〜0.1（東京電力は規制料金・燃料費調整制度による遅延回収があり、他業種の転嫁能力とは異なる）",
+      "sources": [
+        {"name": "東京電力 2022年度決算", "url": "https://www.tepco.co.jp/press/release/2023/1665289_8713.html"},
+        {"name": "ガスエネニュース: LNG輸入単価2倍（2022年貿易統計）", "url": "https://www.gas-enenews.co.jp/lpgas-lng/608/"}
+      ]
+    },
+    "prop_damp": {
+      "meaning": "Layer A（産業連関）伝播の減衰係数。代替調達・在庫・価格調整による波及の減衰を表す。",
+      "fitted_on": ["thai_flood_2011"],
+      "method": "タイ洪水（2011）で日本の自動車生産が約9〜11%低下した実測に対し、JPN_C29←THA_C26の実効入力係数22%（較正シナリオ仮定）との組み合わせで整合する値。pd=0.4（旧規定値）では5.3%と過小、0.6で9.7%。",
+      "caveat": "タイ洪水で用いた実効入力係数（22%）は製品レベルの集中を表す較正シナリオ仮定であり、観測されたフローではない。同仮定を別イベント（2021年半導体不足）に転用したホールドアウト検証では過小予測（約6倍）となり、実効係数はイベント固有であることが判明している（docs/validation-report.md 参照）。",
+      "uncertainty": "0.4〜0.8（イベント固有の集中度に依存）",
+      "sources": [
+        {"name": "Reuters: トヨタ・タイ洪水で世界約21.5万台減産", "url": "https://www.reuters.com/jp/article/markets/japan/7203t5-idUST9E7MP01B/"},
+        {"name": "愛知県: タイ洪水の影響を受けた鉱工業生産指数", "url": "https://www.pref.aichi.jp/uploaded/attachment/8229.pdf"}
+      ]
+    }
+  },
+  "methodology": "docs/validation-report.md",
+  "events": "analysis/validation_events.json",
+  "results": "analysis/validation_results.json"
 }

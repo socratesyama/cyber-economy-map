@@ -1,0 +1,257 @@
+{
+  "generated": "2026-11-11",
+  "engine_params": {
+    "pass_through": 0.05,
+    "prop_damp": 0.6
+  },
+  "events": {
+    "thai_flood_2011": {
+      "split": "train",
+      "params": {
+        "countries": [
+          "THA"
+        ],
+        "stop_rate": 0.4
+      },
+      "layerA": {
+        "jpn_mean_loss_pct": 0.365,
+        "jpn_c29_loss_pct": 9.735,
+        "jpn_d_loss_pct": 0.068,
+        "jpn_c26_loss_pct": 0.499,
+        "amplification": 0.009
+      },
+      "comparisons": [
+        {
+          "key": "jpn_c29_loss",
+          "comparable": true,
+          "note": "業種平均（JPN_C29）とトヨタ固有の数値の差（愛知県IP ▲9.1%）は係数の不確実性の範囲として扱う。"
+        }
+      ]
+    },
+    "tohoku_2011": {
+      "split": "train",
+      "params": {
+        "countries": [
+          "JPN"
+        ],
+        "stop_rate": 0.155
+      },
+      "layerA": {
+        "jpn_mean_loss_pct": 26.17,
+        "jpn_c29_loss_pct": 27.466,
+        "jpn_d_loss_pct": 22.81,
+        "jpn_c26_loss_pct": 26.62,
+        "amplification": 1.688
+      },
+      "comparisons": [
+        {
+          "key": "propagation_amplification",
+          "comparable": true,
+          "note": "エンジンはピーク時の粗損失を計算し復旧はモデル化しないため、年率GDP影響との直接比較は不可。伝播による増幅率のみ比較する。"
+        }
+      ]
+    },
+    "ukraine_2022": {
+      "split": "train",
+      "params": {
+        "commodity": "lng_japan",
+        "multiplier": 2.04
+      },
+      "layerA": {
+        "jpn_mean_loss_pct": 0.904,
+        "jpn_c29_loss_pct": 0.364,
+        "jpn_d_loss_pct": 3.883,
+        "jpn_c26_loss_pct": 0.384
+      },
+      "comparisons": [
+        {
+          "key": "tepco_margin_loss",
+          "comparable": true,
+          "note": "電気料金への転嫁（規制・燃料費調整制度）と政府支援により実際の損失はコスト増より大幅に小さい。モデルのpass_through（マージン圧迫率）をこの観測で較正する。"
+        },
+        {
+          "key": "cpi_pass_through",
+          "comparable": true,
+          "note": "観測された価格転嫁率は約19%。ただし燃料費調整制度の遅延・政府支援の影響を含む。"
+        }
+      ]
+    },
+    "covid_2020": {
+      "split": "train",
+      "params": {
+        "countries": "ALL",
+        "stop_rate": 0.048
+      },
+      "layerA": {
+        "jpn_mean_loss_pct": 10.13,
+        "jpn_c29_loss_pct": 10.361,
+        "jpn_d_loss_pct": 10.411,
+        "jpn_c26_loss_pct": 10.308,
+        "amplification": 2.11
+      },
+      "comparisons": [
+        {
+          "key": "japan_gdp",
+          "comparable": true,
+          "note": "一様ショックのため業種間の不均一性（自動車-16.3%等）は再現しない。"
+        }
+      ]
+    },
+    "sea_chip_shortage_2021": {
+      "split": "holdout",
+      "params": {
+        "countries": [
+          "MYS",
+          "VNM",
+          "THA"
+        ],
+        "stop_rate": 0.3
+      },
+      "layerA": {
+        "jpn_mean_loss_pct": 0.488,
+        "jpn_c29_loss_pct": 7.593,
+        "jpn_d_loss_pct": 1.153,
+        "jpn_c26_loss_pct": 0.545,
+        "amplification": 0.016
+      },
+      "comparisons": [
+        {
+          "key": "jpn_c29_loss",
+          "comparable": true,
+          "note": "タイ洪水で較正した実効依存度が別イベントに転用できるかを検証する（ホールドアウト）。"
+        }
+      ]
+    },
+    "suez_2021": {
+      "split": "holdout",
+      "params": {
+        "route_id": "suez",
+        "severity": 0.0164
+      },
+      "layerA": {
+        "jpn_mean_loss_pct": 0.019,
+        "jpn_c29_loss_pct": 0.009,
+        "jpn_d_loss_pct": 0.072,
+        "jpn_c26_loss_pct": 0.009
+      },
+      "comparisons": [
+        {
+          "key": "japan_trade_impact",
+          "comparable": false,
+          "note": "6日間の遅延は在庫と迂回で大部分が吸収され、日本の月次生産指数への検出可能な影響は無かった。エンジンも微小な損失を出すことを確認する（数量整合性の下限検証）。"
+        }
+      ]
+    },
+    "red_sea_2024": {
+      "split": "holdout",
+      "params": {
+        "route_id": "suez",
+        "severity": 0.42
+      },
+      "layerA": {
+        "jpn_mean_loss_pct": 1.172,
+        "jpn_c29_loss_pct": 0.543,
+        "jpn_d_loss_pct": 4.415,
+        "jpn_c26_loss_pct": 1.147
+      },
+      "comparisons": [
+        {
+          "key": "shipping_rates",
+          "comparable": false,
+          "note": "エンジンは数量障害（輸送シェア×severity）をモデル化し運賃（価格）はモデル化しない。価格対応は範囲外として文書化する。"
+        }
+      ]
+    },
+    "toyota_cyber_2022": {
+      "split": "holdout",
+      "params": {
+        "severity": 0.004
+      },
+      "firm": {
+        "seed_ticker": "7203",
+        "seed_mean_loss_pct": 0.409,
+        "suppliers_mean_loss_pct": 0.0006,
+        "firms_affected_gt1pct": 0
+      },
+      "comparisons": [
+        {
+          "key": "toyota_loss",
+          "comparable": true,
+          "note": "severity（期間×稼働率）の直接対応を検証。伝播（子会社・他社への波及）はタイとダイハツも停止したことが観測と整合する。"
+        }
+      ]
+    },
+    "kumamoto_2016": {
+      "split": "holdout",
+      "params": {
+        "severity": 0.0154
+      },
+      "firm": {
+        "seed_ticker": "7203",
+        "seed_mean_loss_pct": 1.532,
+        "suppliers_mean_loss_pct": 0.0022,
+        "firms_affected_gt1pct": 1
+      },
+      "comparisons": [
+        {
+          "key": "toyota_loss",
+          "comparable": true,
+          "note": "severityの直接対応を検証。"
+        }
+      ]
+    },
+    "renesas_fire_2021": {
+      "split": "holdout",
+      "params": {
+        "severity": 0.09
+      },
+      "firm": {
+        "seed_ticker": "6723",
+        "seed_mean_loss_pct": 8.85,
+        "suppliers_mean_loss_pct": 0.0,
+        "firms_affected_gt1pct": 1
+      },
+      "comparisons": [
+        {
+          "key": "renesas_loss",
+          "comparable": true,
+          "note": "severityの直接対応を検証。"
+        }
+      ]
+    },
+    "maersk_notpetya_2017": {
+      "status": "reference_only",
+      "observed": [
+        {
+          "metric": "maersk_loss_usd_million",
+          "value": 300,
+          "unit": "百万ドル（上限推計）",
+          "window": "2017年",
+          "source": "Maersk決算説明（The Register / CNBC報道）",
+          "source_url": "https://www.theregister.com/security/2017/08/16/notpetya-ransomware-attack-cost-us-300m-shipping-giant-maersk/1343911"
+        }
+      ]
+    },
+    "ms_cyber_2025": {
+      "status": "reference_only",
+      "observed": [
+        {
+          "metric": "ms_operating_profit_impact_gbp_million",
+          "value": -300,
+          "unit": "百万ポンド（運営利益影響の初期推計）",
+          "window": "2025年度",
+          "source": "Reuters",
+          "source_url": "https://www.reuters.com/business/media-telecom/britains-ms-says-cyberattack-cost-400-million-2025-05-21/"
+        },
+        {
+          "metric": "ms_actual_costs_gbp_million",
+          "value": 136,
+          "unit": "百万ポンド（後判明した実費用）",
+          "window": "2025年度",
+          "source": "The Register",
+          "source_url": "https://www.theregister.com/security/2025/11/05/ms-pegs-cyber-cleanup-costs-at-136m-profits-tumble/325250"
+        }
+      ]
+    }
+  }
+}

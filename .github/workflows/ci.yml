@@ -23,6 +23,40 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Syntax-check the restored legacy engine scripts
         run: python -m py_compile scripts/scenario_engine.py scripts/export_viz.py
+      - name: Validate engine parameters and event registry against calibrated outputs
+        run: |
+          python -m py_compile scripts/validate_engine.py
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+
+          # 較正パラメータの整合性
+          cal = json.loads(Path("analysis/calibrated_params.json").read_text(encoding="utf-8"))
+          assert 0.0 < cal["pass_through"] <= 0.5, "pass_transfer out of plausible range"
+          assert 0.0 < cal["prop_damp"] <= 1.0, "prop_damp out of plausible range"
+
+          # イベント登録簿の構造
+          reg = json.loads(Path("analysis/validation_events.json").read_text(encoding="utf-8"))
+          ids = [e["event_id"] for e in reg["events"]]
+          assert len(ids) == len(set(ids)), "duplicate event ids"
+          for e in reg["events"]:
+              assert e.get("split") in ("train", "holdout", "reference")
+              if e.get("scenario"):
+                  assert e.get("scenario_params"), e["event_id"]
+              for o in e.get("observed", []):
+                  assert o.get("source_url"), f"{e['event_id']}/{o['metric']}: 出典URLなし"
+          train = [e["event_id"] for e in reg["events"] if e.get("split") == "train"]
+          hold = [e["event_id"] for e in reg["events"] if e.get("split") == "holdout"]
+          assert train and hold, "train/holdout split required"
+
+          # 較正結果の記録と整合
+          res = json.loads(Path("analysis/validation_results.json").read_text(encoding="utf-8"))
+          assert res["engine_params"]["pass_through"] == cal["pass_through"]
+          assert res["engine_params"]["prop_damp"] == cal["prop_damp"]
+          for eid in train + hold:
+              assert eid in res["events"], f"missing validation result: {eid}"
+          print("validation registry OK:", len(reg["events"]), "events")
+          PY
       - name: Validate the static viewer and its data
         run: |
           python - <<'PY'
